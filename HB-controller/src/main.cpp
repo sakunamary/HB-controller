@@ -2,13 +2,12 @@
 #include "config.h"
 #include "TASK_read_temp.h"
 
-#include <cmndreader.h>
+// #include <cmndreader.h>
 
 #include <ModbusIP_ESP8266.h>
 
 SemaphoreHandle_t xserialReadBufferMutex = NULL;                           // Mutex for TC4数据输出时写入队列的数据
 QueueHandle_t queueCMD = xQueueCreate(8, sizeof(char[BUFFER_SIZE]));       // 发送到TC4的命令队列
-QueueHandle_t queueTC4_data = xQueueCreate(10, sizeof(char[BUFFER_SIZE])); // 接受TC4发出的反馈数据队列
 String local_IP;
 
 // Modbus Registers Offsets
@@ -25,6 +24,10 @@ const uint16_t PID_P_HREG = 3009;
 const uint16_t PID_I_HREG = 3010;
 const uint16_t PID_D_HREG = 3011;
 
+double BT_TEMP ; 
+double ET_TEMP ;
+double INLET_TEMP ;
+double EX_TEMP ;
 
 char ap_name[30];
 uint8_t macAddr[6];
@@ -40,7 +43,7 @@ uint16_t last_PWR;
 // ModbusIP object
 ModbusIP mb;
 
-CmndInterp ci(DELIM); // command interpreter object
+// CmndInterp ci(DELIM); // command interpreter object
 uint8_t serialReadBuffer[BUFFER_SIZE];
 
 
@@ -196,9 +199,9 @@ void setup()
 
     ////////////////////////////////////////////////////////////////
 
-    ci.addCommand(&pid);
-    ci.addCommand(&io3);
-    ci.addCommand(&ot1);
+    // ci.addCommand(&pid);
+    // ci.addCommand(&io3);
+    // ci.addCommand(&ot1);
 }
 
 void loop()
