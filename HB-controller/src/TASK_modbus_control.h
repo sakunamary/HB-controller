@@ -16,4 +16,27 @@ uint16_t last_PID_D;
 
 
 
+void Task_modbus_control(void *pvParameters)
+{ //function 
+
+    /* Variable Definition */
+    (void)pvParameters;
+    TickType_t xLastWakeTime;
+
+    const TickType_t xIntervel = 100 / portTICK_PERIOD_MS;
+    /* Task Setup and Initialize */
+    // Initial the xLastWakeTime variable with the current time.
+    xLastWakeTime = xTaskGetTickCount();
+
+    for (;;) // A Task shall never return or exit.
+    { //for loop
+
+
+
+
+
+    }
+
+}
+
 #endif

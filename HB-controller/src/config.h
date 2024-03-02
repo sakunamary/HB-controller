@@ -7,13 +7,23 @@
 
 #define VERSION "1.0.0"
 
-
 #define MODEL_M6S
 
+#define SPI_MISO 19
+#define SPI_SCK 18
+#define SPI_MOSI 23
+#define SPI_CS_BT 35
+#define SPI_CS_INLET 32
+#define SPI_CS_EX 33
+#define SPI_CS_ET 34
 
-//#define DEBUG_MODE
-#define TX 17
-#define RX 16
+#define SYSTEM_RLY 25
+#define FAN_RLY 26
+#define HEAT_RLY 27
+
+#define DEBUG_MODE
+#define HMI_TX 17
+#define HMI_RX 16
 
 const int BUFFER_SIZE = 64;
 
