@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "config.h"
 #include "TASK_read_temp.h"
+#include "TASK_modbus_control.h"
 
 // #include <cmndreader.h>
 
@@ -18,8 +19,7 @@ const uint16_t EXHAUST_HREG = 3004;
 const uint16_t HEAT_HREG = 3005;
 const uint16_t FAN_HREG = 3006;
 const uint16_t SV_HREG = 3007;
-const uint16_t RESET_HREG = 3008;
-const uint16_t PID_HREG = 3007;
+const uint16_t PID_HREG = 3008;
 const uint16_t PID_P_HREG = 3009;
 const uint16_t PID_I_HREG = 3010;
 const uint16_t PID_D_HREG = 3011;
@@ -177,7 +177,6 @@ void setup()
     mb.addHreg(HEAT_HREG);
     mb.addHreg(FAN_HREG);
     mb.addHreg(SV_HREG);
-    mb.addHreg(RESET_HREG);
     mb.addHreg(PID_HREG);
     mb.addHreg(PID_P_HREG);
     mb.addHreg(PID_I_HREG);
@@ -190,7 +189,6 @@ void setup()
     mb.Hreg(HEAT_HREG, 0);  // 初始化赋值
     mb.Hreg(FAN_HREG, 0);   // 初始化赋值
     mb.Hreg(SV_HREG, 0);    // 初始化赋值
-    mb.Hreg(RESET_HREG, 0); // 初始化赋值
     mb.Hreg(PID_HREG, 0);   // 初始化赋值
     mb.Hreg(PID_P_HREG, 500);   // 初始化赋值 X100
     mb.Hreg(PID_I_HREG, 0);   // 初始化赋值 X100

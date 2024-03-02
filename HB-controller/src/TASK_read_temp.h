@@ -1,5 +1,8 @@
 #ifndef __TASK_READ_TEMP_H__
 #define __TASK_READ_TEMP_H__
+
+
+
 #include <Arduino.h>
 #include <Wire.h>
 #include "max6675.h"
