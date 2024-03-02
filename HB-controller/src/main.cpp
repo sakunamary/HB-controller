@@ -2,9 +2,13 @@
 #include "config.h"
 #include "TASK_read_temp.h"
 #include "TASK_modbus_control.h"
+#include <HardwareSerial.h>
+
 
 // #include <cmndreader.h>
 
+
+HardwareSerial Serial_in(2); // D16 RX_drumer  D17 TX_drumer
 SemaphoreHandle_t xserialReadBufferMutex = NULL;                     // Mutex for TC4数据输出时写入队列的数据
 QueueHandle_t queueCMD = xQueueCreate(8, sizeof(char[BUFFER_SIZE])); // 发送到TC4的命令队列
 String local_IP;
@@ -69,9 +73,10 @@ void setup()
     pinMode(FAN_RLY, OUTPUT);
     pinMode(HEAT_RLY, OUTPUT);
 
-    digitalWrite(SYSTEM_RLY, HIGH); // 初始化电路启动；
+    digitalWrite(SYSTEM_RLY, LOW); // 初始化电路启动；
 
     Serial.begin(BAUDRATE);
+    Serial_in.begin(BAUDRATE, SERIAL_8N1, HMI_RX, HMI_TX);
 #if defined(DEBUG_MODE)
     Serial.printf("\nSerial Started");
 #endif

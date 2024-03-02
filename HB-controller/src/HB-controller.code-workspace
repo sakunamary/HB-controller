@@ -1,0 +1,60 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"name": "HB-controller",
+			"path": ".."
+		}
+	],
+    "settings": {
+        "files.associations": {
+            "__bit_reference": "cpp",
+            "__hash_table": "cpp",
+            "__split_buffer": "cpp",
+            "__tree": "cpp",
+            "array": "cpp",
+            "deque": "cpp",
+            "hash_map": "cpp",
+            "filesystem": "cpp",
+            "initializer_list": "cpp",
+            "iterator": "cpp",
+            "list": "cpp",
+            "map": "cpp",
+            "span": "cpp",
+            "string": "cpp",
+            "string_view": "cpp",
+            "unordered_map": "cpp",
+            "unordered_set": "cpp",
+            "vector": "cpp",
+            "*.ipp": "cpp",
+            "format": "cpp",
+            "chrono": "cpp",
+            "cmath": "cpp",
+            "compare": "cpp",
+            "cstdint": "cpp",
+            "__functional_base": "cpp",
+            "__node_handle": "cpp",
+            "algorithm": "cpp",
+            "atomic": "cpp",
+            "bitset": "cpp",
+            "__memory": "cpp",
+            "functional": "cpp",
+            "limits": "cpp",
+            "locale": "cpp",
+            "memory": "cpp",
+            "optional": "cpp",
+            "random": "cpp",
+            "ratio": "cpp",
+            "system_error": "cpp",
+            "tuple": "cpp",
+            "type_traits": "cpp",
+            "istream": "cpp",
+            "ostream": "cpp",
+            "utility": "cpp",
+            "variant": "cpp",
+            "charconv": "cpp"
+        }
+    }
+}
