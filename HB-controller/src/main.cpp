@@ -44,12 +44,10 @@ CmndInterp ci(DELIM); // command interpreter object
 uint8_t serialReadBuffer[BUFFER_SIZE];
 
 
-
-
-
-
 void setup()
 {
+
+    xThermoDataMutex = xSemaphoreCreateMutex();
     xserialReadBufferMutex = xSemaphoreCreateMutex();
     Serial.begin(BAUDRATE);
 
@@ -57,80 +55,91 @@ void setup()
     Serial.printf("\nSerial Started\n");
 #endif
 
+  thermo_INLET.begin(MAX31865_4WIRE);  // set to 2WIRE or 4WIRE as necessary
+  thermo_BT.begin(MAX31865_4WIRE);  // set to 2WIRE or 4WIRE as necessary
+#if defined(MODEL_M6S)
+  thermo_ET.begin(MAX31865_4WIRE);  // set to 2WIRE or 4WIRE as necessary
+#endif
+
+#if defined(DEBUG_MODE)
+    Serial.printf("\nThermo sensor Started\n");
+#endif
+
+
     /*---------- Task Definition ---------------------*/
     // Setup tasks to run independently.
     xTaskCreatePinnedToCore(
-        TASK_ReadDataFormTC4, "DataFormTC4" // 测量电池电源数据，每分钟测量一次
-        ,
-        1024 * 4 // This stack size can be checked & adjusted by reading the Stack Highwater
-        ,
-        NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-        ,
-        NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    );
-#if defined(DEBUG_MODE)
-    Serial.printf("\nTASK=1:DataFormTC4 OK\n");
-#endif
-
-
-    // Setup tasks to run independently.
-    xTaskCreatePinnedToCore(
-        TASK_Modbus_Send_DATA, "ModbusSendTask" // 测量电池电源数据，每分钟测量一次
+        TaskThermo_get_data, "Thermo_get_data" // 测量电池电源数据，每分钟测量一次
         ,
         1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
         ,
-        NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+        NULL, 4 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
         ,
         NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
 #if defined(DEBUG_MODE)
-    Serial.printf("\nTASK=3:ModbusSendTask OK\n");
+    Serial.printf("\nTASK=1:Thermo_get_data OK\n");
 #endif
 
-    // Setup tasks to run independently.
-    xTaskCreate(
-        TASK_Send_READ_CMDtoTC4, "READ_CMDtoTC4" // 测量电池电源数据，每分钟测量一次
-        ,
-        1024 // This stack size can be checked & adjusted by reading the Stack Highwater
-        ,
-        NULL, 1 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-        ,
-        NULL // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    );
 
-#if defined(DEBUG_MODE)
-    Serial.printf("\nTASK=4:READ_CMDtoTC4 OK \n");
-#endif
+//     // Setup tasks to run independently.
+//     xTaskCreatePinnedToCore(
+//         TASK_Modbus_Send_DATA, "ModbusSendTask" // 测量电池电源数据，每分钟测量一次
+//         ,
+//         1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
+//         ,
+//         NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+//         ,
+//         NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+//     );
+// #if defined(DEBUG_MODE)
+//     Serial.printf("\nTASK=3:ModbusSendTask OK\n");
+// #endif
 
-    // Setup tasks to run independently.
-    xTaskCreate(
-        TASK_SendCMDtoTC4, "SendCMDtoTC4" // 测量电池电源数据，每分钟测量一次
-        ,
-        1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
-        ,
-        NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-        ,
-        NULL // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    );
+//     // Setup tasks to run independently.
+//     xTaskCreate(
+//         TASK_Send_READ_CMDtoTC4, "READ_CMDtoTC4" // 测量电池电源数据，每分钟测量一次
+//         ,
+//         1024 // This stack size can be checked & adjusted by reading the Stack Highwater
+//         ,
+//         NULL, 1 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+//         ,
+//         NULL // Running Core decided by FreeRTOS,let core0 run wifi and BT
+//     );
 
-#if defined(DEBUG_MODE)
-    Serial.printf("\nTASK=5:SendCMDtoTC4 OK \n");
-#endif
+// #if defined(DEBUG_MODE)
+//     Serial.printf("\nTASK=4:READ_CMDtoTC4 OK \n");
+// #endif
 
-    // Setup tasks to run independently.
-    xTaskCreatePinnedToCore(
-        TASK_Modbus_From_CMD, "TASK_Modbus_From_CMD" // 测量电池电源数据，每分钟测量一次
-        ,
-        1024 * 10 // This stack size can be checked & adjusted by reading the Stack Highwater
-        ,
-        NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-        ,
-        NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    );
+//     // Setup tasks to run independently.
+//     xTaskCreate(
+//         TASK_SendCMDtoTC4, "SendCMDtoTC4" // 测量电池电源数据，每分钟测量一次
+//         ,
+//         1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
+//         ,
+//         NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+//         ,
+//         NULL // Running Core decided by FreeRTOS,let core0 run wifi and BT
+//     );
 
-#if defined(DEBUG_MODE)
-    Serial.printf("\nTASK=6:TASK_Modbus_From_CMD OK \n");
-#endif
+// #if defined(DEBUG_MODE)
+//     Serial.printf("\nTASK=5:SendCMDtoTC4 OK \n");
+// #endif
+
+//     // Setup tasks to run independently.
+//     xTaskCreatePinnedToCore(
+//         TASK_Modbus_From_CMD, "TASK_Modbus_From_CMD" // 测量电池电源数据，每分钟测量一次
+//         ,
+//         1024 * 10 // This stack size can be checked & adjusted by reading the Stack Highwater
+//         ,
+//         NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+//         ,
+//         NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+//     );
+
+// #if defined(DEBUG_MODE)
+//     Serial.printf("\nTASK=6:TASK_Modbus_From_CMD OK \n");
+// #endif
 
     // 初始化网络服务
     WiFi.macAddress(macAddr);
@@ -151,12 +160,6 @@ void setup()
         vTaskDelay(500);
     }
 
-//     // Init BLE Serial
-//     SerialBT.begin(ap_name, true, 2);
-//     SerialBT.setTimeout(10);
-// #if defined(DEBUG_MODE)
-//     Serial.printf("\nSerial_BT setup OK\n");
-// #endif
 // Init Modbus-TCP
 #if defined(DEBUG_MODE)
     Serial.printf("\nStart Modbus-TCP  service OK\n");

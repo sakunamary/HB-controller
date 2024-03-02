@@ -7,12 +7,14 @@
 
 #define VERSION "1.0.0"
 
+
+#define MODEL_M6S
+
+
 //#define DEBUG_MODE
 #define TX 17
 #define RX 16
 
 const int BUFFER_SIZE = 64;
-
-
 
 #endif
