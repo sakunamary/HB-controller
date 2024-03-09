@@ -12,14 +12,16 @@
 #define SPI_MISO 19
 #define SPI_SCK 18
 #define SPI_MOSI 23
-#define SPI_CS_BT 35
-#define SPI_CS_INLET 32
-#define SPI_CS_EX 33
-#define SPI_CS_ET 34
+#define SPI_CS_BT 26
+#define SPI_CS_INLET 27
+#define SPI_CS_EX 5
+#define SPI_CS_ET 25
 
-#define SYSTEM_RLY 25
-#define FAN_RLY 26
-#define HEAT_RLY 27
+#define SYSTEM_RLY 22
+#define FAN_RLY 21
+#define HEAT_RLY 14
+#define PWM_HEAT 33
+
 
 #define DEBUG_MODE
 #define HMI_TX 17
