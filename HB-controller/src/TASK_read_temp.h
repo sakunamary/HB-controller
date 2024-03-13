@@ -7,29 +7,30 @@
 #include <Adafruit_MAX31865.h>
 #include <ModbusIP_ESP8266.h>
 
+#define SPI_CS_INLET 25 // ch1 ok
+#define SPI_CS_EX 14    // ch2 ok
+#define SPI_CS_BT 26    // ch3
+#define SPI_CS_ET 27    // ch4
+
+#define SPI_MISO 19
+#define SPI_SCK 18
+#define SPI_MOSI 23
+
 extern double BT_TEMP;
 extern double ET_TEMP;
 extern double INLET_TEMP;
 extern double EX_TEMP;
 
-int thermoMISO = SPI_MISO;
-int thermoCLK = SPI_SCK;
-int thermoMOSI = SPI_MOSI;
+MAX6675 thermo_EX(SPI_SCK, SPI_CS_EX, SPI_MISO); // CH2  thermoEX
 
-int thermoCS_BT = SPI_CS_BT;
-int thermoCS_INLET = SPI_CS_INLET;
-int thermoCS_EX = SPI_CS_EX;
-
-MAX6675 thermo_EX(thermoCLK, thermoCS_EX, thermoMISO); // CH2  thermoEX
 // Use software SPI: CS, DI, DO, CLK
-Adafruit_MAX31865 thermo_INLET = Adafruit_MAX31865(thermoCS_INLET, thermoMOSI, thermoMISO, thermoCLK); // CH1
-Adafruit_MAX31865 thermo_BT = Adafruit_MAX31865(thermoCS_BT, thermoMOSI, thermoMISO, thermoCLK);       // CH3
+Adafruit_MAX31865 thermo_INLET = Adafruit_MAX31865(SPI_CS_INLET, SPI_MOSI, SPI_MISO, SPI_SCK); // CH1
+Adafruit_MAX31865 thermo_BT = Adafruit_MAX31865(SPI_CS_BT, SPI_MOSI, SPI_MISO, SPI_SCK);       // CH3
 
 SemaphoreHandle_t xThermoDataMutex = NULL;
 
 #if defined(MODEL_M6S)
-int thermoCS_ET = SPI_CS_ET;
-Adafruit_MAX31865 thermo_ET = Adafruit_MAX31865(thermoCS_ET, thermoMOSI, thermoMISO, thermoCLK); // CH4
+Adafruit_MAX31865 thermo_ET = Adafruit_MAX31865(SPI_CS_ET, SPI_MOSI, SPI_MISO, SPI_SCK); // CH4
 #endif
 
 // The value of the Rref resistor. Use 430.0 for PT100 and 4300.0 for PT1000
@@ -83,7 +84,6 @@ void TaskThermo_get_data(void *pvParameters)
 #endif
             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
         }
-
     }
 
 } // function
