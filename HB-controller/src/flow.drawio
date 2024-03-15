@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="BzFfho2s-DosaZCxsHBp" name="第 1 页">
-        <mxGraphModel dx="2297" dy="1026" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="2643" dy="1267" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -80,7 +80,7 @@
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="22" value="TASK_DATA_to_HMI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d80073;fontColor=#ffffff;strokeColor=#A50040;" parent="1" vertex="1">
-                    <mxGeometry x="1120" y="130" width="140" height="60" as="geometry"/>
+                    <mxGeometry x="1000" y="130" width="140" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="25" style="edgeStyle=none;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="23" target="20" edge="1">
                     <mxGeometry relative="1" as="geometry">
@@ -134,13 +134,12 @@
                 <mxCell id="45" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="32" target="36">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1080" y="400"/>
-                            <mxPoint x="1080" y="290"/>
+                            <mxPoint x="1000" y="400"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="32" value="xQueue_temp_data" style="whiteSpace=wrap;html=1;rounded=1;fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" vertex="1" parent="1">
-                    <mxGeometry x="910" y="370" width="120" height="60" as="geometry"/>
+                    <mxGeometry x="840" y="370" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="35" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="34" target="20">
                     <mxGeometry relative="1" as="geometry"/>
@@ -149,29 +148,29 @@
                     <mxGeometry x="270" y="260" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="36" value="串口2数据输出" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
-                    <mxGeometry x="1130" y="260" width="120" height="60" as="geometry"/>
+                    <mxGeometry x="1010" y="370" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="38" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="39" target="40">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="42" value="NO HOLDING" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="38">
+                <mxCell id="42" value="200ms" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="38">
                     <mxGeometry x="-0.1469" y="-1" relative="1" as="geometry">
                         <mxPoint as="offset"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="39" value="TASK_CMD_from_HMI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d80073;fontColor=#ffffff;strokeColor=#A50040;" vertex="1" parent="1">
-                    <mxGeometry x="1370" y="130" width="140" height="60" as="geometry"/>
+                    <mxGeometry x="1180" y="130" width="140" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="67" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="40" target="66">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="40" value="串口2数据输入" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
-                    <mxGeometry x="1380" y="260" width="120" height="60" as="geometry"/>
+                    <mxGeometry x="1190" y="260" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="50" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="48" target="32">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="970" y="770"/>
+                            <mxPoint x="900" y="770"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -227,13 +226,13 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="66" value="数据格式化提取" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
-                    <mxGeometry x="1380" y="380" width="120" height="60" as="geometry"/>
+                    <mxGeometry x="1190" y="380" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="68" value="主板命令操作&lt;br&gt;火力mb.Hreg()&lt;br&gt;冷却开关&lt;br&gt;火力开关" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
-                    <mxGeometry x="1380" y="510" width="120" height="60" as="geometry"/>
+                    <mxGeometry x="1190" y="510" width="120" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="70" value="定时器ROASTER_TIMER()" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
-                    <mxGeometry x="1580" y="380" width="120" height="60" as="geometry"/>
+                    <mxGeometry x="1360" y="380" width="120" height="60" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
