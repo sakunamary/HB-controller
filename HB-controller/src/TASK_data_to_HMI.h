@@ -4,6 +4,8 @@
 #include "config.h"
 
 
+HardwareSerial Serial_HMI(2); // D16 RX_drumer  D17 TX_drumer
+
 
 // Task for keep sending 指令到TC4
 void TASK_data_to_HMI(void *pvParameters)
@@ -19,9 +21,9 @@ void TASK_data_to_HMI(void *pvParameters)
     for (;;)
     {
         vTaskDelayUntil(&xLastWakeTime, xIntervel);
-        if (xQueueReceive(queue_data_to_HMI, &CMDBuffer, timeOut) == pdPASS)
+        if (xQueueReceive(queue_data_to_HMI, &DATA_Buffer, timeOut) == pdPASS)
         { // 从接收QueueCMD 接收指令
-            Serial_in.print((char *)CMDBuffer);
+            Serial_HMI.print((char *)DATA_Buffer);
             vTaskDelay(20);
         }
     }

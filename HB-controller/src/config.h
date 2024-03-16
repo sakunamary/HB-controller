@@ -2,15 +2,25 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#include <Wire.h>
-
-#define uS_TO_S_FACTOR 1000000 /* Conversion factor for micro seconds to seconds */
-#define BAUDRATE 115200        // serial port baudrate
-
 #define VERSION "1.0.0"
 
-#define MODEL_M6S
+// uncomment to make work for HB M6SE ,default is work for HB M2SE
+//#define MODEL_M6S
+//uncomment to switch to MODBUS RTU   ,default is work in MODBUS TCP MODE 
+#define MODBUS_RTU
+#define SLAVE_ID 1 //MODBUS RTU SLAVE ID 
 
+
+// pwm setting
+#define PWM_FREQ 10000
+#define PWM_RESOLUTION 10 // 0-1024
+
+///////////////////////////////////////
+//   DO NOT make any change below    //
+///////////////////////////////////////
+#define uS_TO_S_FACTOR 1000000 /* Conversion factor for micro seconds to seconds */
+#define BAUDRATE 115200        // serial port baudrate
+// pinout define
 #define ENC_BUTTON 34
 #define ENC_CLK 32
 #define ENC_DT 35
@@ -21,8 +31,8 @@
 
 #define SPI_CS_INLET 25 // ch1 OK
 #define SPI_CS_EX 14    // ch2 OK
-#define SPI_CS_BT 26    // ch3 OK 
-#define SPI_CS_ET 27    // ch4 OK 
+#define SPI_CS_BT 26    // ch3 OK
+#define SPI_CS_ET 27    // ch4 OK
 
 #define SYSTEM_RLY 22
 #define FAN_RLY 21
@@ -35,13 +45,8 @@
 
 const int BUFFER_SIZE = 32;
 
-
-
-// The value of the Rref resistor. Use 430.0 for PT100 and 4300.0 for PT1000
+// parametsrs of MAX31865
 #define RREF 430.0
-// The 'nominal' 0-degrees-C resistance of the sensor
-// 100.0 for PT100, 1000.0 for PT1000
 #define RNOMINAL 100.0
-
 
 #endif

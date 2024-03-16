@@ -2,18 +2,25 @@
 #define __TASK_READ_TEMP_H__
 
 #include <Arduino.h>
+#include "config.h"
 #include <Wire.h>
 #include "max6675.h"
 #include <Adafruit_MAX31865.h>
-#include <ModbusIP_ESP8266.h>
 
-double BT_TEMP;
-double ET_TEMP;
-double INLET_TEMP;
-double EX_TEMP;
+#if defined(MODBUS_RTU)
+#include <ModbusRTU.h>
+ModbusRTU mb;
+#else
+#include <ModbusIP_ESP8266.h>
+ModbusIP mb;  //declear object 
+
+uint16_t BT_TEMP;
+uint16_t ET_TEMP;
+uint16_t INLET_TEMP;
+uint16_t EX_TEMP;
 
 SemaphoreHandle_t xThermoDataMutex = NULL;
-QueueHandle_t queue_data_to_HMI = xQueueCreate(8, sizeof(char[BUFFER_SIZE])); // 发送到TC4的命令队列
+QueueHandle_t queue_data_to_HMI = xQueueCreate(10, sizeof(char[BUFFER_SIZE])); // 发送到TC4的命令队列
 
 MAX6675 thermo_EX(SPI_SCK, SPI_CS_EX, SPI_MISO); // CH2  thermoEX
 
@@ -25,8 +32,6 @@ Adafruit_MAX31865 thermo_BT = Adafruit_MAX31865(SPI_CS_BT, SPI_MOSI, SPI_MISO, S
 Adafruit_MAX31865 thermo_ET = Adafruit_MAX31865(SPI_CS_ET, SPI_MOSI, SPI_MISO, SPI_SCK); // CH4
 #endif
 
-// ModbusIP object
-ModbusIP mb;
 
 // Modbus Registers Offsets
 const uint16_t BT_HREG = 3001;
@@ -40,7 +45,7 @@ void TaskThermo_get_data(void *pvParameters)
     /* Variable Definition */
     (void)pvParameters;
     TickType_t xLastWakeTime;
-    uint8_t DATA_Buffer[BUFFER_SIZE];
+    char DATA_Buffer[BUFFER_SIZE];
     const TickType_t xIntervel = 2000 / portTICK_PERIOD_MS;
     /* Task Setup and Initialize */
     // Initial the xLastWakeTime variable with the current time.
@@ -53,25 +58,31 @@ void TaskThermo_get_data(void *pvParameters)
         if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
         {                                                          // lock the  mutex
             // 读取max6675数据
-            EX_TEMP = round((thermo_EX.readCelsius() * 10) / 10);
+            EX_TEMP = int(round((thermo_EX.readCelsius() * 10) / 10) * 100);
             vTaskDelay(50);
-            INLET_TEMP = round((thermo_INLET.temperature(RNOMINAL, RREF) * 10) / 10);
+            INLET_TEMP = int(round((thermo_INLET.temperature(RNOMINAL, RREF) * 10) / 10) * 100);
             vTaskDelay(50);
-            BT_TEMP = round((thermo_BT.temperature(RNOMINAL, RREF) * 10) / 10);
+            BT_TEMP = int(round((thermo_BT.temperature(RNOMINAL, RREF) * 10) / 10) * 100);
             vTaskDelay(50);
 
             // send temp data to queue to HMI
-            // DATA_Buffer[BUFFER_SIZE]=''   //发送BT数据
+            memset(DATA_Buffer, '\0', sizeof(DATA_Buffer));
+            sprintf(DATA_Buffer, "@SEND 103 %d", BT_TEMP);
             xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 4);
-            // DATA_Buffer[BUFFER_SIZE]=''   //发送BT数据
+
+            memset(DATA_Buffer, '\0', sizeof(DATA_Buffer));
+            sprintf(DATA_Buffer, "@SEND 103 %d", INLET_TEMP);
             xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 4);
-            // DATA_Buffer[BUFFER_SIZE]=''   //发送BT数据
+
+            memset(DATA_Buffer, '\0', sizeof(DATA_Buffer));
+            sprintf(DATA_Buffer, "@SEND 103 %d", EX_TEMP);
             xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 4);
 
 #if defined(MODEL_M6S)
-            ET_TEMP = round((thermo_ET.temperature(RNOMINAL, RREF) * 10) / 10);
+            ET_TEMP = int(round((thermo_ET.temperature(RNOMINAL, RREF) * 10) / 10) * 100);
             vTaskDelay(50);
-            // DATA_Buffer[BUFFER_SIZE]=''   //发送BT数据
+            memset(DATA_Buffer, '\0', sizeof(DATA_Buffer));
+            sprintf(DATA_Buffer, "@SEND 103 %d", ET_TEMP);
             xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 4);
 #endif
 
