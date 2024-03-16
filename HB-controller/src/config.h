@@ -19,10 +19,10 @@
 #define SPI_SCK 18
 #define SPI_MOSI 23
 
-#define SPI_CS_INLET 25 // ch1 ok
-#define SPI_CS_EX 14    // ch2 ok
-#define SPI_CS_BT 26    // ch3
-#define SPI_CS_ET 27    // ch4
+#define SPI_CS_INLET 25 // ch1 OK
+#define SPI_CS_EX 14    // ch2 OK
+#define SPI_CS_BT 26    // ch3 OK 
+#define SPI_CS_ET 27    // ch4 OK 
 
 #define SYSTEM_RLY 22
 #define FAN_RLY 21
@@ -33,6 +33,15 @@
 #define HMI_TX 17
 #define HMI_RX 16
 
-const int BUFFER_SIZE = 64;
+const int BUFFER_SIZE = 32;
+
+
+
+// The value of the Rref resistor. Use 430.0 for PT100 and 4300.0 for PT1000
+#define RREF 430.0
+// The 'nominal' 0-degrees-C resistance of the sensor
+// 100.0 for PT100, 1000.0 for PT1000
+#define RNOMINAL 100.0
+
 
 #endif

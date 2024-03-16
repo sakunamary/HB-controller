@@ -2,7 +2,9 @@
 #include "config.h"
 #include "TASK_read_temp.h"
 #include "TASK_modbus_control.h"
-#include <HardwareSerial.h>
+#include "TASK_CMD_from_HMI.h"
+#include "TASK_data_to_HMI.h"
+
 
 
 // #include <cmndreader.h>
@@ -11,6 +13,7 @@
 HardwareSerial Serial_in(2); // D16 RX_drumer  D17 TX_drumer
 SemaphoreHandle_t xserialReadBufferMutex = NULL;                     // Mutex for TC4数据输出时写入队列的数据
 QueueHandle_t queueCMD = xQueueCreate(8, sizeof(char[BUFFER_SIZE])); // 发送到TC4的命令队列
+
 String local_IP;
 
 bool init_check();
@@ -67,7 +70,7 @@ void setup()
 {
 
     xThermoDataMutex = xSemaphoreCreateMutex();
-    xserialReadBufferMutex = xSemaphoreCreateMutex();
+    //xserialReadBufferMutex = xSemaphoreCreateMutex();
 
     pinMode(SYSTEM_RLY, OUTPUT);
     pinMode(FAN_RLY, OUTPUT);
