@@ -40,7 +40,7 @@
 #define HEAT_RLY 12
 #define PWM_HEAT 33
 
-#define DEBUG_MODE
+
 #define HMI_TX 17
 #define HMI_RX 16
 

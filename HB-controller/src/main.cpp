@@ -3,52 +3,26 @@
 #include "config.h"
 #include "HardwareSerial.h"
 #include "TASK_read_temp.h"
-// #include "TASK_modbus_control.h"
-// #include "TASK_CMD_from_HMI.h"
 #include "TASK_data_to_HMI.h"
+#include "TASK_modbus_control.h"
+// #include "TASK_CMD_from_HMI.h"
 
 String local_IP;
-
-bool init_check();
 
 char ap_name[30];
 uint8_t macAddr[6];
 
-// CmndInterp ci(DELIM); // command interpreter object
-uint8_t serialReadBuffer[BUFFER_SIZE];
 
-bool init_check()
-{
-    if (!thermo_INLET.begin(MAX31865_4WIRE))
-    {
-        Serial.printf("\nSensor INLET is Not ready...");
-        return false;
-    }
-    if (!thermo_BT.begin(MAX31865_4WIRE))
-    {
-        Serial.printf("\nSensor BT is Not ready...");
-        return false;
-    }
-#if defined(MODEL_M6S)
-    if (!thermo_ET.begin(MAX31865_4WIRE))
-    {
-        Serial.printf("\nSensor ET is Not ready...");
-        return false;
-    }
-#endif
 
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    Serial.printf("\nThermo sensor Started");
-#endif
 
-    return true;
-}
+
+
 
 void setup()
 {
 
     xThermoDataMutex = xSemaphoreCreateMutex();
-    // xSerialReadBufferMutex = xSemaphoreCreateMutex();
+    //xSerialReadBufferMutex = xSemaphoreCreateMutex();
 
     pinMode(SYSTEM_RLY, OUTPUT);
     pinMode(FAN_RLY, OUTPUT);
@@ -58,51 +32,37 @@ void setup()
     digitalWrite(FAN_RLY, LOW);    // 初始化电路启动；
     digitalWrite(HEAT_RLY, LOW);   // 初始化电路启动；
 
-
     Serial.begin(BAUDRATE); // for MODBUS TCP debug
-
     Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
+
+    thermo_INLET.begin(MAX31865_2WIRE); // set to 2WIRE or 4WIRE as necessary
+    thermo_BT.begin(MAX31865_2WIRE);    // set to 2WIRE or 4WIRE as necessary
+#if defined(MODEL_M6S)
+    thermo_ET.begin(MAX31865_2WIRE);    // set to 2WIRE or 4WIRE as necessary
+#endif
+
+
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nSerial Started");
 #endif
 
-    while (!init_check())
-    {
-        Serial.printf("\nSensor is Not ready...");
-        vTaskDelay(1000);
-    }
-    
-
     /*---------- Task Definition ---------------------*/
     // Setup tasks to run independently.
-    xTaskCreatePinnedToCore(
-        TaskThermo_get_data, "Thermo_get_data" // 
+        xTaskCreatePinnedToCore(
+        Task_Thermo_get_data, "Thermo_get_data" //
         ,
-        1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
+        1024 * 8 // This stack size can be checked & adjusted by reading the Stack Highwater
         ,
-        NULL, 4 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+        NULL, 5 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
         ,
-        NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+        NULL,1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nTASK=1:Thermo_get_data OK");
 #endif
 
-    //     xTaskCreatePinnedToCore(
-    //         Task_modbus_control, "modbus_control" // 测量电池电源数据，每分钟测量一次
-    //         ,
-    //         1024 * 10 // This stack size can be checked & adjusted by reading the Stack Highwater
-    //         ,
-    //         NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    //         ,
-    //         NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    //     );
-    // #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    //     Serial.printf("\nTASK=2:modbus_control OK");
-    // #endif
-
     xTaskCreatePinnedToCore(
-        TASK_data_to_HMI, "data_to_HMI" // 测量电池电源数据，每分钟测量一次
+        TASK_data_to_HMI, "data_to_HMI" //
         ,
         1024 * 4 // This stack size can be checked & adjusted by reading the Stack Highwater
         ,
@@ -111,8 +71,35 @@ void setup()
         NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    Serial.printf("\nTASK=3:data_to_HMI OK");
+    Serial.printf("\nTASK=2:data_to_HMI OK");
 #endif
+
+    xTaskCreatePinnedToCore(
+        Task_modbus_control, "modbus_control" //
+        ,
+        1024 * 4 // This stack size can be checked & adjusted by reading the Stack Highwater
+        ,
+        NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+        ,
+        NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+    );
+#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+    Serial.printf("\nTASK=3:modbus_control OK");
+#endif
+
+
+//     xTaskCreatePinnedToCore(
+//         TASK_CMD_From_HMI, "CMD_From_HMI" //
+//         ,
+//         1024 * 2 // This stack size can be checked & adjusted by reading the Stack Highwater
+//         ,
+//         NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+//         ,
+//         NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+//     );
+// #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+//     Serial.printf("\nTASK=4:CMD_From_HMI OK");
+// #endif
 
     // 初始化网络服务
     WiFi.macAddress(macAddr);
@@ -133,7 +120,6 @@ void setup()
         vTaskDelay(500);
     }
 
-
     mb.server(502); // Start Modbus IP //default port :502
 
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
@@ -145,7 +131,7 @@ void setup()
     mb.addHreg(INLET_HREG);
     mb.addHreg(EXHAUST_HREG);
 
-    // mb.addHreg(HEAT_HREG);
+    mb.addHreg(HEAT_HREG);
 
     // mb.addHreg(SV_HREG);
     // mb.addHreg(PID_HREG);
@@ -158,7 +144,7 @@ void setup()
     mb.Hreg(INLET_HREG, 0);   // 初始化赋值
     mb.Hreg(EXHAUST_HREG, 0); // 初始化赋值
 
-    // mb.Hreg(HEAT_HREG, 0); // 初始化赋值
+    mb.Hreg(HEAT_HREG, 0); // 初始化赋值
 
     // mb.Hreg(SV_HREG, 0);      // 初始化赋值
     // mb.Hreg(PID_HREG, 0);     // 初始化赋值
