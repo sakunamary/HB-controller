@@ -53,12 +53,12 @@ void Task_Thermo_get_data(void *pvParameters)
         vTaskDelayUntil(&xLastWakeTime, xIntervel);
         if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
         {
-
-            vTaskDelay(100);
+            vTaskDelay(120);
             INLET_TEMP = thermo_INLET.temperature(RNOMINAL, RREF); // CH1
-            vTaskDelay(100);
+            vTaskDelay(60);
             EX_TEMP = thermo_EX.readCelsius(); // CH2
-            vTaskDelay(100);
+
+            vTaskDelay(60);
             BT_TEMP = thermo_BT.temperature(RNOMINAL, RREF); // CH3
 
 #if defined(MODEL_M6S)
