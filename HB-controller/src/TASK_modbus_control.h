@@ -51,7 +51,7 @@ void Task_modbus_control(void *pvParameters)
                 // send temp data to queue to HMI
                 memset(DATA_Buffer, '\0', sizeof(DATA_Buffer));
                 sprintf(DATA_Buffer, "@SEND 103 %d", last_PWR);
-                xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel);
+                xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel * 5);
 
                 init_status = true;
                 pid_on_status = false;

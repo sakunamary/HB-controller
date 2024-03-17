@@ -6,13 +6,10 @@
 #include <Wire.h>
 #include "max6675.h"
 #include <Adafruit_MAX31865.h>
+#include <WiFi.h>
 
-#if defined(MODBUS_RTU)
-#include <ModbusRTU.h>
-ModbusRTU mb;
-#else
 #include <ModbusIP_ESP8266.h>
-ModbusIP mb;  //declear object 
+ModbusIP mb; // declear object
 
 uint16_t BT_TEMP;
 uint16_t ET_TEMP;
@@ -31,7 +28,6 @@ Adafruit_MAX31865 thermo_BT = Adafruit_MAX31865(SPI_CS_BT, SPI_MOSI, SPI_MISO, S
 #if defined(MODEL_M6S)
 Adafruit_MAX31865 thermo_ET = Adafruit_MAX31865(SPI_CS_ET, SPI_MOSI, SPI_MISO, SPI_SCK); // CH4
 #endif
-
 
 // Modbus Registers Offsets
 const uint16_t BT_HREG = 3001;
@@ -67,31 +63,39 @@ void TaskThermo_get_data(void *pvParameters)
 
             // send temp data to queue to HMI
             memset(DATA_Buffer, '\0', sizeof(DATA_Buffer));
-            sprintf(DATA_Buffer, "@SEND 103 %d", BT_TEMP);
-            xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 4);
+            sprintf(DATA_Buffer, "float_bt.val=%d\xff\xff\xff", BT_TEMP);
+            xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 2);
 
             memset(DATA_Buffer, '\0', sizeof(DATA_Buffer));
-            sprintf(DATA_Buffer, "@SEND 103 %d", INLET_TEMP);
-            xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 4);
+            sprintf(DATA_Buffer, "float_in.val=%d\xff\xff\xff", INLET_TEMP);
+            xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 2);
 
             memset(DATA_Buffer, '\0', sizeof(DATA_Buffer));
-            sprintf(DATA_Buffer, "@SEND 103 %d", EX_TEMP);
-            xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 4);
+            sprintf(DATA_Buffer, "float_ex.val=%d\xff\xff\xff", EX_TEMP);
+            xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 2);
+
+#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+            Serial.printf("BT:%d\n", BT_TEMP);
+            Serial.printf("INLET:%d\n", INLET_TEMP);
+            Serial.printf("EX:%d\n", EX_TEMP);
+#endif
 
 #if defined(MODEL_M6S)
             ET_TEMP = int(round((thermo_ET.temperature(RNOMINAL, RREF) * 10) / 10) * 100);
             vTaskDelay(50);
             memset(DATA_Buffer, '\0', sizeof(DATA_Buffer));
-            sprintf(DATA_Buffer, "@SEND 103 %d", ET_TEMP);
-            xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 4);
+            sprintf(DATA_Buffer, "float_et.val= %3.2f\xff\xff\xff", ET_TEMP);
+            xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 2);
 #endif
 
             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
         }
+
         // update  Hreg data
         mb.Hreg(BT_HREG, BT_TEMP);       // 初始化赋值
         mb.Hreg(INLET_HREG, INLET_TEMP); // 初始化赋值
         mb.Hreg(EXHAUST_HREG, EX_TEMP);  // 初始化赋值
+
 #if defined(MODEL_M6S)
         mb.Hreg(ET_HREG, ET_TEMP); // 初始化赋值
 #endif

@@ -1,16 +1,11 @@
 #include <Arduino.h>
+#include <WiFi.h>
 #include "config.h"
 #include "HardwareSerial.h"
 #include "TASK_read_temp.h"
-#include "TASK_modbus_control.h"
-#include "TASK_CMD_from_HMI.h"
+// #include "TASK_modbus_control.h"
+// #include "TASK_CMD_from_HMI.h"
 #include "TASK_data_to_HMI.h"
-
-
-
-
-
-
 
 String local_IP;
 
@@ -65,20 +60,10 @@ void setup()
     digitalWrite(HEAT_RLY, LOW); // 初始化电路启动；
 
 
-// Init Modbus
-#if defined(MODBUS_RTU)
-  mb.begin(&Serial);
-  mb.setBaudrate(9600);
-  mb.slave(SLAVE_ID);
-#else 
+
+
+
     Serial.begin(BAUDRATE);
-    mb.server(502); // Start Modbus IP //default port :502
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU) 
-    Serial.printf("\nStart Modbus-TCP  service OK\n");
-#endif
-#endif
-
-
     Serial_HMI.begin(BAUDRATE, SERIAL_8N1, HMI_RX, HMI_TX);
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nSerial Started");
@@ -106,21 +91,32 @@ void setup()
     Serial.printf("\nTASK=1:Thermo_get_data OK");
 #endif
 
-    // Setup tasks to run independently.
+
+//     xTaskCreatePinnedToCore(
+//         Task_modbus_control, "modbus_control" // 测量电池电源数据，每分钟测量一次
+//         ,
+//         1024 * 10 // This stack size can be checked & adjusted by reading the Stack Highwater
+//         ,
+//         NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+//         ,
+//         NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+//     );
+// #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+//     Serial.printf("\nTASK=2:modbus_control OK");
+// #endif
+
     xTaskCreatePinnedToCore(
-        Task_modbus_control, "modbus_control" // 测量电池电源数据，每分钟测量一次
+        TASK_data_to_HMI, "data_to_HMI" // 测量电池电源数据，每分钟测量一次
         ,
-        1024 * 10 // This stack size can be checked & adjusted by reading the Stack Highwater
+        1024 * 4 // This stack size can be checked & adjusted by reading the Stack Highwater
         ,
-        NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+        NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
         ,
         NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    Serial.printf("\nTASK=2:modbus_control OK");
+    Serial.printf("\nTASK=3:data_to_HMI OK");
 #endif
-
-
 
 
 
@@ -144,33 +140,38 @@ void setup()
         vTaskDelay(500);
     }
 
+// Init Modbus
 
+    mb.server(502); // Start Modbus IP //default port :502
+#if defined(DEBUG_MODE) && !defined(MODBUS_RTU) 
+    Serial.printf("\nStart Modbus-TCP  service OK\n");
+#endif
     // Add SENSOR_IREG register - Use addIreg() for analog Inputs
     mb.addHreg(BT_HREG);
     mb.addHreg(ET_HREG);
     mb.addHreg(INLET_HREG);
     mb.addHreg(EXHAUST_HREG);
 
-    mb.addHreg(HEAT_HREG);
+    // mb.addHreg(HEAT_HREG);
 
-    mb.addHreg(SV_HREG);
-    mb.addHreg(PID_HREG);
-    mb.addHreg(PID_P_HREG);
-    mb.addHreg(PID_I_HREG);
-    mb.addHreg(PID_D_HREG);
+    // mb.addHreg(SV_HREG);
+    // mb.addHreg(PID_HREG);
+    // mb.addHreg(PID_P_HREG);
+    // mb.addHreg(PID_I_HREG);
+    // mb.addHreg(PID_D_HREG);
 
     mb.Hreg(BT_HREG, 0);      // 初始化赋值
     mb.Hreg(ET_HREG, 0);      // 初始化赋值
     mb.Hreg(INLET_HREG, 0);   // 初始化赋值
     mb.Hreg(EXHAUST_HREG, 0); // 初始化赋值
 
-    mb.Hreg(HEAT_HREG, 0); // 初始化赋值
+    // mb.Hreg(HEAT_HREG, 0); // 初始化赋值
 
-    mb.Hreg(SV_HREG, 0);      // 初始化赋值
-    mb.Hreg(PID_HREG, 0);     // 初始化赋值
-    mb.Hreg(PID_P_HREG, 500); // 初始化赋值 X100
-    mb.Hreg(PID_I_HREG, 0);   // 初始化赋值 X100
-    mb.Hreg(PID_D_HREG, 10);  // 初始化赋值 X100
+    // mb.Hreg(SV_HREG, 0);      // 初始化赋值
+    // mb.Hreg(PID_HREG, 0);     // 初始化赋值
+    // mb.Hreg(PID_P_HREG, 500); // 初始化赋值 X100
+    // mb.Hreg(PID_I_HREG, 0);   // 初始化赋值 X100
+    // mb.Hreg(PID_D_HREG, 10);  // 初始化赋值 X100
 
     ////////////////////////////////////////////////////////////////
 

@@ -3,11 +3,11 @@
 #define __CONFIG_H__
 
 #define VERSION "1.0.0"
-
+#define DEBUG_MODE
 // uncomment to make work for HB M6SE ,default is work for HB M2SE
 //#define MODEL_M6S
 //uncomment to switch to MODBUS RTU   ,default is work in MODBUS TCP MODE 
-#define MODBUS_RTU
+//#define MODBUS_RTU
 #define SLAVE_ID 1 //MODBUS RTU SLAVE ID 
 
 
@@ -29,10 +29,10 @@
 #define SPI_SCK 18
 #define SPI_MOSI 23
 
-#define SPI_CS_INLET 25 // ch1 OK
+#define SPI_CS_INLET 27 // ch1 OK
 #define SPI_CS_EX 14    // ch2 OK
 #define SPI_CS_BT 26    // ch3 OK
-#define SPI_CS_ET 27    // ch4 OK
+#define SPI_CS_ET 25    // ch4 OK
 
 #define SYSTEM_RLY 22
 #define FAN_RLY 21
