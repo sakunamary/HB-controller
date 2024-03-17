@@ -17,7 +17,7 @@ uint16_t INLET_TEMP;
 uint16_t EX_TEMP;
 
 SemaphoreHandle_t xThermoDataMutex = NULL;
-QueueHandle_t queue_data_to_HMI = xQueueCreate(10, sizeof(char[BUFFER_SIZE])); // 发送到TC4的命令队列
+QueueHandle_t queue_data_to_HMI = xQueueCreate(12, sizeof(char[BUFFER_SIZE])); // 发送到TC4的命令队列
 
 MAX6675 thermo_EX(SPI_SCK, SPI_CS_EX, SPI_MISO); // CH2  thermoEX
 
@@ -42,7 +42,7 @@ void TaskThermo_get_data(void *pvParameters)
     (void)pvParameters;
     TickType_t xLastWakeTime;
     char DATA_Buffer[BUFFER_SIZE];
-    const TickType_t xIntervel = 2000 / portTICK_PERIOD_MS;
+    const TickType_t xIntervel = 1500 / portTICK_PERIOD_MS;
     /* Task Setup and Initialize */
     // Initial the xLastWakeTime variable with the current time.
     xLastWakeTime = xTaskGetTickCount();
@@ -52,42 +52,34 @@ void TaskThermo_get_data(void *pvParameters)
         // Wait for the next cycle (intervel 1500ms).
         vTaskDelayUntil(&xLastWakeTime, xIntervel);
         if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
-        {                                                          // lock the  mutex
-            // 读取max6675数据
-            EX_TEMP = int(round((thermo_EX.readCelsius() * 10) / 10) * 100);
-            vTaskDelay(50);
-            INLET_TEMP = int(round((thermo_INLET.temperature(RNOMINAL, RREF) * 10) / 10) * 100);
-            vTaskDelay(50);
-            BT_TEMP = int(round((thermo_BT.temperature(RNOMINAL, RREF) * 10) / 10) * 100);
-            vTaskDelay(50);
-
-            // send temp data to queue to HMI
+        {
+            // 读取max31865数据
+            BT_TEMP = int(thermo_BT.temperature(RNOMINAL, RREF) * 100);
             memset(DATA_Buffer, '\0', sizeof(DATA_Buffer));
             sprintf(DATA_Buffer, "float_bt.val=%d\xff\xff\xff", BT_TEMP);
             xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 2);
+            vTaskDelay(50);
 
+            INLET_TEMP = int(thermo_INLET.temperature(RNOMINAL, RREF) * 100);
             memset(DATA_Buffer, '\0', sizeof(DATA_Buffer));
             sprintf(DATA_Buffer, "float_in.val=%d\xff\xff\xff", INLET_TEMP);
             xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 2);
+            vTaskDelay(50); 
 
+            // 读取max6675数据
+            EX_TEMP = int(rthermo_EX.readCelsius() * 100);
             memset(DATA_Buffer, '\0', sizeof(DATA_Buffer));
             sprintf(DATA_Buffer, "float_ex.val=%d\xff\xff\xff", EX_TEMP);
             xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 2);
-
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-            Serial.printf("BT:%d\n", BT_TEMP);
-            Serial.printf("INLET:%d\n", INLET_TEMP);
-            Serial.printf("EX:%d\n", EX_TEMP);
-#endif
+            vTaskDelay(50);
 
 #if defined(MODEL_M6S)
-            ET_TEMP = int(round((thermo_ET.temperature(RNOMINAL, RREF) * 10) / 10) * 100);
-            vTaskDelay(50);
+            ET_TEMP = int(thermo_ET.temperature(RNOMINAL, RREF) * 100);
+            vTaskDelay(60);
             memset(DATA_Buffer, '\0', sizeof(DATA_Buffer));
-            sprintf(DATA_Buffer, "float_et.val= %3.2f\xff\xff\xff", ET_TEMP);
+            sprintf(DATA_Buffer, "float_et.val=%d\xff\xff\xff", ET_TEMP);
             xQueueSend(queue_data_to_HMI, &DATA_Buffer, xIntervel / 2);
 #endif
-
             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
         }
 

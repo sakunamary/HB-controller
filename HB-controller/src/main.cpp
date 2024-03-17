@@ -14,7 +14,6 @@ bool init_check();
 char ap_name[30];
 uint8_t macAddr[6];
 
-
 // CmndInterp ci(DELIM); // command interpreter object
 uint8_t serialReadBuffer[BUFFER_SIZE];
 
@@ -49,22 +48,20 @@ void setup()
 {
 
     xThermoDataMutex = xSemaphoreCreateMutex();
-    //xSerialReadBufferMutex = xSemaphoreCreateMutex();
+    // xSerialReadBufferMutex = xSemaphoreCreateMutex();
 
     pinMode(SYSTEM_RLY, OUTPUT);
     pinMode(FAN_RLY, OUTPUT);
     pinMode(HEAT_RLY, OUTPUT);
 
     digitalWrite(SYSTEM_RLY, LOW); // 初始化电路启动；
-    digitalWrite(FAN_RLY, LOW); // 初始化电路启动；
-    digitalWrite(HEAT_RLY, LOW); // 初始化电路启动；
+    digitalWrite(FAN_RLY, LOW);    // 初始化电路启动；
+    digitalWrite(HEAT_RLY, LOW);   // 初始化电路启动；
 
 
+    Serial.begin(BAUDRATE); // for MODBUS TCP debug
 
-
-
-    Serial.begin(BAUDRATE);
-    Serial_HMI.begin(BAUDRATE, SERIAL_8N1, HMI_RX, HMI_TX);
+    Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nSerial Started");
 #endif
@@ -74,12 +71,12 @@ void setup()
         Serial.printf("\nSensor is Not ready...");
         vTaskDelay(1000);
     }
-    digitalWrite(HEAT_RLY, HIGH); // 火力电路启动；
+    
 
     /*---------- Task Definition ---------------------*/
     // Setup tasks to run independently.
     xTaskCreatePinnedToCore(
-        TaskThermo_get_data, "Thermo_get_data" // 测量电池电源数据，每分钟测量一次
+        TaskThermo_get_data, "Thermo_get_data" // 
         ,
         1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
         ,
@@ -91,19 +88,18 @@ void setup()
     Serial.printf("\nTASK=1:Thermo_get_data OK");
 #endif
 
-
-//     xTaskCreatePinnedToCore(
-//         Task_modbus_control, "modbus_control" // 测量电池电源数据，每分钟测量一次
-//         ,
-//         1024 * 10 // This stack size can be checked & adjusted by reading the Stack Highwater
-//         ,
-//         NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-//         ,
-//         NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-//     );
-// #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-//     Serial.printf("\nTASK=2:modbus_control OK");
-// #endif
+    //     xTaskCreatePinnedToCore(
+    //         Task_modbus_control, "modbus_control" // 测量电池电源数据，每分钟测量一次
+    //         ,
+    //         1024 * 10 // This stack size can be checked & adjusted by reading the Stack Highwater
+    //         ,
+    //         NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    //         ,
+    //         NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+    //     );
+    // #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+    //     Serial.printf("\nTASK=2:modbus_control OK");
+    // #endif
 
     xTaskCreatePinnedToCore(
         TASK_data_to_HMI, "data_to_HMI" // 测量电池电源数据，每分钟测量一次
@@ -117,9 +113,6 @@ void setup()
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nTASK=3:data_to_HMI OK");
 #endif
-
-
-
 
     // 初始化网络服务
     WiFi.macAddress(macAddr);
@@ -140,10 +133,10 @@ void setup()
         vTaskDelay(500);
     }
 
-// Init Modbus
 
     mb.server(502); // Start Modbus IP //default port :502
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU) 
+
+#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nStart Modbus-TCP  service OK\n");
 #endif
     // Add SENSOR_IREG register - Use addIreg() for analog Inputs
@@ -179,8 +172,7 @@ void setup()
     // ci.addCommand(&io3);
     // ci.addCommand(&ot1);
 
-
-        digitalWrite(SYSTEM_RLY, HIGH); // 启动机器
+    digitalWrite(SYSTEM_RLY, HIGH); // 启动机器
 }
 
 void loop()

@@ -20,6 +20,7 @@
 ///////////////////////////////////////
 #define uS_TO_S_FACTOR 1000000 /* Conversion factor for micro seconds to seconds */
 #define BAUDRATE 115200        // serial port baudrate
+#define BAUD_HMI 9600
 // pinout define
 #define ENC_BUTTON 34
 #define ENC_CLK 32
