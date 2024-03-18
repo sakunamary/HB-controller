@@ -3,7 +3,14 @@
 
 #include <Arduino.h>
 #include <config.h>
-// #include <pwmWrite.h>
+
+#include <pwmWrite.h>
+// PWM Pins
+const int HEAT_OUT_PIN = PWM_HEAT; // GPIO26
+const uint32_t frequency = PWM_FREQ;
+const byte resolution = PWM_RESOLUTION; // pwm -0-4096
+
+Pwm pwm_heat = Pwm();
 
 const uint16_t HEAT_HREG = 3005;
 // const uint16_t SV_HREG = 3006;
@@ -18,16 +25,9 @@ uint16_t last_PWR;
 //  uint16_t last_PID_I;
 //  uint16_t last_PID_D;
 
-// PWM Pins
-// const int HEAT_OUT_PIN = PWM_HEAT; // GPIO26
-// const uint32_t frequency = PWM_FREQ;
-// const byte resolution = PWM_RESOLUTION; // pwm -0-4096
-
-// Pwm pwm_heat = Pwm();
-
 int heat_level_to_artisan = 0;
 bool init_status = true;
-// bool pid_on_status = false;
+bool pid_on_status = false;
 
 void Task_modbus_control(void *pvParameters)
 { // function
@@ -36,7 +36,7 @@ void Task_modbus_control(void *pvParameters)
     (void)pvParameters;
     TickType_t xLastWakeTime;
     char CMD_DATA_Buffer[BUFFER_SIZE];
-    const TickType_t xIntervel = 200 / portTICK_PERIOD_MS;
+    const TickType_t xIntervel = 100 / portTICK_PERIOD_MS;
     /* Task Setup and Initialize */
     // Initial the xLastWakeTime variable with the current time.
     xLastWakeTime = xTaskGetTickCount();
@@ -52,9 +52,11 @@ void Task_modbus_control(void *pvParameters)
             if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
             {
                 last_PWR = mb.Hreg(HEAT_HREG);
-               // memset(CMD_DATA_Buffer, '\0', sizeof(CMD_DATA_Buffer));
+                heat_level_to_artisan = 0;
                 sprintf(CMD_DATA_Buffer, "num_pwr.val=%d\xff\xff\xff", last_PWR);
                 xQueueSend(queue_data_to_HMI, &CMD_DATA_Buffer, xIntervel);
+                //Serial.printf("pwr(in task_modbus_control):%d\n", heat_level_to_artisan);
+
                 xSemaphoreGive(xThermoDataMutex); // end of lock mutex
             }
             init_status = false;
@@ -68,15 +70,15 @@ void Task_modbus_control(void *pvParameters)
                 {
                     heat_level_to_artisan = mb.Hreg(HEAT_HREG);
                     last_PWR = heat_level_to_artisan;
-                    //memset(CMD_DATA_Buffer, '\0', sizeof(CMD_DATA_Buffer));
+                    // memset(CMD_DATA_Buffer, '\0', sizeof(CMD_DATA_Buffer));
                     sprintf(CMD_DATA_Buffer, "num_pwr.val=%d\xff\xff\xff", last_PWR);
                     xQueueSend(queue_data_to_HMI, &CMD_DATA_Buffer, xIntervel);
+                    //Serial.printf("pwr(in task_modbus_control):%d\n", heat_level_to_artisan);
+                    
                     xSemaphoreGive(xThermoDataMutex); // end of lock mutex
                 }
             }
         }
-        // Serial.printf("pwr:%d\n", last_PWR);
-        // pwm_heat.write(HEAT_OUT_PIN, map(heat_level_to_artisan, 0, 100, 230, 850), PWM_FREQ, resolution);
     }
 }
 #endif

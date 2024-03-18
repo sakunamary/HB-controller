@@ -13,7 +13,7 @@ void TASK_data_to_HMI(void *pvParameters)
     const TickType_t timeOut = 200;
     uint8_t Serial_DATA_Buffer[BUFFER_SIZE];
 
-    const TickType_t xIntervel = 250 / portTICK_PERIOD_MS;
+    const TickType_t xIntervel = 100 / portTICK_PERIOD_MS;
     xLastWakeTime = xTaskGetTickCount();
 
     for (;;)

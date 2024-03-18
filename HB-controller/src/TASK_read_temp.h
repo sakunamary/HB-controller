@@ -49,53 +49,52 @@ void Task_Thermo_get_data(void *pvParameters)
     for (;;) // A Task shall never return or exit.
     {        // for loop
         // Wait for the next cycle (intervel 2000ms).
-
         vTaskDelayUntil(&xLastWakeTime, xIntervel);
         if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
         {
-            vTaskDelay(120);
+            vTaskDelay(60);
             INLET_TEMP = thermo_INLET.temperature(RNOMINAL, RREF); // CH1
             vTaskDelay(60);
             EX_TEMP = thermo_EX.readCelsius(); // CH2
-
             vTaskDelay(60);
             BT_TEMP = thermo_BT.temperature(RNOMINAL, RREF); // CH3
 
 #if defined(MODEL_M6S)
 
-            vTaskDelay(100);
+            vTaskDelay(60);
             ET_TEMP = int(round(thermo_ET.temperature(RNOMINAL, RREF) * 10));
 #endif
             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
         }
 
-        // memset(TEMP_DATA_Buffer, '\0', sizeof(TEMP_DATA_Buffer));
-        sprintf(TEMP_DATA_Buffer, "float_ex.val=%d\xff\xff\xff", int(round(EX_TEMP * 10)));
-        xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 4);
-        // memset(TEMP_DATA_Buffer, '\0', sizeof(TEMP_DATA_Buffer));
-        sprintf(TEMP_DATA_Buffer, "float_bt.val=%d\xff\xff\xff", int(round(BT_TEMP * 10)));
-        xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 4);
-        // memset(TEMP_DATA_Buffer, '\0', sizeof(TEMP_DATA_Buffer));
-        sprintf(TEMP_DATA_Buffer, "float_in.val=%d\xff\xff\xff", int(round(INLET_TEMP * 10)));
-        xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 4);
-
-#if defined(MODEL_M6S)
-        // memset(TEMP_DATA_Buffer, '\0', sizeof(TEMP_DATA_Buffer));
-        sprintf(TEMP_DATA_Buffer, "float_et.val=%d\xff\xff\xff", ET_TEMP);
-        xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 2);
-#endif
-
+#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
         Serial.printf("CH3 bt:%d\n", int(round(BT_TEMP * 10)));
         Serial.printf("CH1 inlet:%d\n", int(round(INLET_TEMP * 10)));
         Serial.printf("CH2 ex:%d\n", int(round(BT_TEMP * 10)));
         Serial.println();
+#endif
         // update  Hreg data
         mb.Hreg(BT_HREG, int(round(BT_TEMP * 10)));       // 初始化赋值
         mb.Hreg(INLET_HREG, int(round(INLET_TEMP * 10))); // 初始化赋值
         mb.Hreg(EXHAUST_HREG, int(round(EX_TEMP * 10)));  // 初始化赋值
 
 #if defined(MODEL_M6S)
-        mb.Hreg(ET_HREG, ET_TEMP); // 初始化赋值
+        mb.Hreg(ET_HREG, int(round(ET_TEMP * 10)) ET_TEMP); // 初始化赋值
+#endif
+
+        sprintf(TEMP_DATA_Buffer, "float_ex.val=%d\xff\xff\xff", int(round(EX_TEMP * 10)));
+        xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 4);
+
+        sprintf(TEMP_DATA_Buffer, "float_bt.val=%d\xff\xff\xff", int(round(BT_TEMP * 10)));
+        xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 4);
+
+        sprintf(TEMP_DATA_Buffer, "float_in.val=%d\xff\xff\xff", int(round(INLET_TEMP * 10)));
+        xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 4);
+
+#if defined(MODEL_M6S)
+
+        sprintf(TEMP_DATA_Buffer, "float_et.val=%d\xff\xff\xff", ET_TEMP);
+        xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 2);
 #endif
     }
 

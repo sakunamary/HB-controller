@@ -1,0 +1,22 @@
+ HMI --> HB 的控制命令，主要从HMI模块传入的串口文本格式
+ 火力开关：
+ 冷却开关：
+ pid开关：
+
+
+
+
+HB --> HMI的 自定义数据帧 
+帧头: 67 FF 69
+温度1: 00 00 // uint16
+温度2: 00 00 // uint16
+温度3: 00 00 // uint16
+温度4: 00 00 // uint16
+火力开关: 00 // uint8
+冷却开关: 00 // uint8
+PID mode : 00 // uint8
+PID SV : 00 00 // uint16
+PID P: 00 00 // uint16
+PID I: 00 00 // uint16
+PID D: 00 00 // uint16
+帧尾:FF FF FF 
