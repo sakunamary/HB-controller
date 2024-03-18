@@ -5,11 +5,10 @@
 #define VERSION "1.0.0"
 #define DEBUG_MODE
 // uncomment to make work for HB M6SE ,default is work for HB M2SE
-//#define MODEL_M6S
-//uncomment to switch to MODBUS RTU   ,default is work in MODBUS TCP MODE 
-//#define MODBUS_RTU
-#define SLAVE_ID 1 //MODBUS RTU SLAVE ID 
-
+// #define MODEL_M6S
+// uncomment to switch to MODBUS RTU   ,default is work in MODBUS TCP MODE
+// #define MODBUS_RTU
+#define SLAVE_ID 1 // MODBUS RTU SLAVE ID
 
 // pwm setting
 #define PWM_FREQ 10000
@@ -39,7 +38,6 @@
 #define FAN_RLY 21
 #define HEAT_RLY 12
 #define PWM_HEAT 33
-
 
 #define HMI_TX 17
 #define HMI_RX 16

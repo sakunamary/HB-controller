@@ -1,12 +1,10 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include "config.h"
-#include "HardwareSerial.h"
 #include "TASK_read_temp.h"
 #include "TASK_data_to_HMI.h"
 #include "TASK_modbus_control.h"
-// #include "TASK_CMD_from_HMI.h"
-// #include <pwmWrite.h>
+#include "CMD_from_HMI_handle.h"
 
 String local_IP;
 
@@ -28,16 +26,29 @@ void setup()
     digitalWrite(HEAT_RLY, LOW);   // 初始化电路启动；
 
     Serial.begin(BAUDRATE); // for MODBUS TCP debug
+
     Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
 
+    // Setup callbacks for SerialCommand commands
+    HMI_Commands.addCommand("HEAT", cmd_HEAT);
+    HMI_Commands.addCommand("COOL", cmd_COOL);
+    HMI_Commands.addCommand("PWR", cmd_PWR);
+    HMI_Commands.addCommand("PID_MODE", cmd_PID_MODE);
+    HMI_Commands.addCommand("PID_SV", cmd_PID_SV);
+    HMI_Commands.addCommand("PID_P", cmd_PID_P);
+    HMI_Commands.addCommand("PID_I", cmd_PID_I);
+    HMI_Commands.addCommand("PID_D", cmd_PID_D);
+    HMI_Commands.addDefaultHandler(cmd_unrecognized); // Handler for command that isn't matched  (says "What?")
+
+    // #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+    //     Serial.printf("\nSerial Started");
+    // #endif
+
+    // INIT SENSOR
     thermo_INLET.begin(MAX31865_2WIRE); // set to 2WIRE or 4WIRE as necessary
     thermo_BT.begin(MAX31865_2WIRE);    // set to 2WIRE or 4WIRE as necessary
 #if defined(MODEL_M6S)
     thermo_ET.begin(MAX31865_2WIRE); // set to 2WIRE or 4WIRE as necessary
-#endif
-
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    Serial.printf("\nSerial Started");
 #endif
 
     /*---------- Task Definition ---------------------*/
@@ -137,12 +148,12 @@ void setup()
 
     mb.addHreg(HEAT_HREG);
 
-    // mb.addHreg(SV_HREG);
-    // mb.addHreg(PID_HREG);
-    // mb.addHreg(PID_P_HREG);
-    // mb.addHreg(PID_I_HREG);
-    // mb.addHreg(PID_D_HREG);
-
+    mb.addHreg(SV_HREG);
+    mb.addHreg(PID_HREG);
+    mb.addHreg(PID_P_HREG);
+    mb.addHreg(PID_I_HREG);
+    mb.addHreg(PID_D_HREG);
+    // INIT MODBUS HREG VALUE
     mb.Hreg(BT_HREG, 0);      // 初始化赋值
     mb.Hreg(ET_HREG, 0);      // 初始化赋值
     mb.Hreg(INLET_HREG, 0);   // 初始化赋值
@@ -150,11 +161,11 @@ void setup()
 
     mb.Hreg(HEAT_HREG, 0); // 初始化赋值
 
-    // mb.Hreg(SV_HREG, 0);      // 初始化赋值
-    // mb.Hreg(PID_HREG, 0);     // 初始化赋值
-    // mb.Hreg(PID_P_HREG, 500); // 初始化赋值 X100
-    // mb.Hreg(PID_I_HREG, 0);   // 初始化赋值 X100
-    // mb.Hreg(PID_D_HREG, 10);  // 初始化赋值 X100
+    mb.Hreg(SV_HREG, 0);      // 初始化赋值
+    mb.Hreg(PID_HREG, 0);     // 初始化赋值
+    mb.Hreg(PID_P_HREG, 500); // 初始化赋值 X100
+    mb.Hreg(PID_I_HREG, 0);   // 初始化赋值 X100
+    mb.Hreg(PID_D_HREG, 10);  // 初始化赋值 X100
 
     ////////////////////////////////////////////////////////////////
 
@@ -164,4 +175,5 @@ void setup()
 void loop()
 {
     mb.task();
+    HMI_Commands.readSerial();
 }
