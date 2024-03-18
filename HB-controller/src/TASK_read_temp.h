@@ -101,3 +101,15 @@ void Task_Thermo_get_data(void *pvParameters)
 } // function
 
 #endif
+
+
+// HB --> HMI的 自定义数据帧 
+// 帧头: 69 FF
+// 温度1: 00 00 // uint16
+// 温度2: 00 00 // uint16
+// 温度3: 00 00 // uint16
+// 温度4: 00 00 // uint16
+// 火力: 00 00 // uint16
+// 火力开关: 00 00 // uint16
+// 冷却开关: 00 00// uint16
+// 帧尾:FF FF FF 

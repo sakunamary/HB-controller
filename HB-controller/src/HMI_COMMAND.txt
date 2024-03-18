@@ -1,26 +1,62 @@
  HMI --> HB 的控制命令，主要从HMI模块传入的串口文本格式
- 火力开关：HEAT,ON / OFF;
- 冷却开关：COOL,ON / OFF;
- 火力值：PWR,0-100;
- pid开关：PID_MODE,ON;
- PID_SV(X10): PID_SV,2345;
- PID_P(X100): PID_P,0;
- PID_I(X100): PID_I,0;
- PID_D(X100): PID_D,0;
+ 火力开关：HEAT,1 / 0\r
+ 冷却开关：COOL,1 / 0\r
+ 火力值：PWR,0-100\r
+ pid开关：PID_MODE,1/0\r
+ PID_SV(X10): PID_SV,2345\r
+ PID_P(X100): PID_P,0\r
+ PID_I(X100): PID_I,0\r
+ PID_D(X100): PID_D,0\r
+
 
 
 
 
 HB --> HMI的 自定义数据帧 
-帧头: 67 FF 69
+帧头: 69 FF
 温度1: 00 00 // uint16
 温度2: 00 00 // uint16
 温度3: 00 00 // uint16
 温度4: 00 00 // uint16
-火力: 00 // uint8
-火力开关: 00 // uint8
-冷却开关: 00 // uint8
-PID mode : 00 // uint8
+火力: 00 00 // uint16
+火力开关: 00 00 // uint16
+冷却开关: 00 00// uint16
+帧尾:FF FF FF 
+
+自定义数据帧
+HMI --> HB 的
+帧头: 67 FF
+火力: 00 00 // uint16
+火力开关: 00 00 // uint16
+冷却开关: 00 // uint16
+帧尾:FF FF FF 
+
+
+
+//后期增加PID功能之后更新
+HB --> HMI的 自定义数据帧 
+帧头: 69 FF
+温度1: 00 00 // uint16
+温度2: 00 00 // uint16
+温度3: 00 00 // uint16
+温度4: 00 00 // uint16
+火力: 00 00 // uint16
+火力开关: 00 00 // uint16
+冷却开关: 00 // uint16
+PID mode : 00 00 // uint16
+PID SV(X10) : 00 00 // uint16
+PID P(X100): 00 00 // uint16
+PID I(X100): 00 00 // uint16
+PID D(X100): 00 00 // uint16
+帧尾:FF FF FF 
+
+自定义数据帧
+HMI --> HB 的
+帧头: 67 FF
+火力: 00 00 // uint16
+火力开关: 00 00 // uint16
+冷却开关: 00 // uint16
+PID mode : 00 00 // uint16
 PID SV(X10) : 00 00 // uint16
 PID P(X100): 00 00 // uint16
 PID I(X100): 00 00 // uint16
