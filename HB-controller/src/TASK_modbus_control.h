@@ -13,18 +13,18 @@ const byte resolution = PWM_RESOLUTION; // pwm -0-4096
 Pwm pwm_heat = Pwm();
 
 const uint16_t HEAT_HREG = 3005;
-const uint16_t SV_HREG = 3006;
-const uint16_t PID_HREG = 3007;
-const uint16_t PID_P_HREG = 3008;
-const uint16_t PID_I_HREG = 3009;
-const uint16_t PID_D_HREG = 3010;
-const uint16_t FAN_HREG = 3011;
+// const uint16_t SV_HREG = 3006;
+// const uint16_t PID_HREG = 3007;
+// const uint16_t PID_P_HREG = 3008;
+// const uint16_t PID_I_HREG = 3009;
+// const uint16_t PID_D_HREG = 3010;
+// const uint16_t FAN_HREG = 3011;
 
 uint16_t last_PWR;
-uint16_t last_SV;
- uint16_t last_PID_P;
- uint16_t last_PID_I;
- uint16_t last_PID_D;
+// uint16_t last_SV;
+//  uint16_t last_PID_P;
+//  uint16_t last_PID_I;
+//  uint16_t last_PID_D;
 
 int heat_level_to_artisan = 0;
 bool init_status = true;

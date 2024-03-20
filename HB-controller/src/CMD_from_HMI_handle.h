@@ -2,7 +2,6 @@
 #define __TASK_CMD_FROM_HMI_H__
 #include <Arduino.h>
 #include "config.h"
-#include "SerialCommand.h"
 
 // QueueHandle_t queueCMD = xQueueCreate(8, sizeof(char[BUFFER_SIZE])); // 发送到TC4的命令队列
 // SemaphoreHandle_t xSerialReadBufferMutex = NULL;
@@ -30,106 +29,32 @@
 //     }
 // }
 
-//  HMI --> HB 的控制命令，主要从HMI模块传入的串口文本格式
-//  火力开关：HEAT,1 / 0;
-//  冷却开关：COOL,1 / 0;
-//  火力值：PWR,0-100;
-//  pid开关：PID_MODE,1 / 0 ;
-//  PID_SV(X10): PID_SV,2345;
-//  PID_P(X100): PID_P,0;
-//  PID_I(X100): PID_I,0;
-//  PID_D(X100): PID_D,0;
 
-SerialCommand HMI_Commands(Serial_HMI);
+// HB --> HMI的数据帧 FrameLenght = 14
+// 帧头: 69 FF
+// 类型: 01温度数据 
+// 温度1: 00 00 // uint16
+// 温度2: 00 00 // uint16
+// 温度3: 00 00 // uint16
+// 温度4: 00 00 // uint16
+// 帧尾:FF FF FF 
 
-// This is the default handler, and gets called when no other command matches.
-void cmd_unrecognized()
-{
-    Serial.printf("HMI_serial command ERROR");
-}
+// HB --> HMI的控制状态帧 FrameLenght = 9
+// 帧头: 67 FF
+// 类型:02控制数据 
+// 火力: 00  // uint8
+// 火力开关: 00 // uint8
+// 冷却开关: 00 // uint8
+// 帧尾:FF FF FF 
 
-void cmd_HEAT()
-{
-    int val;
-    char *arg;
-    arg = HMI_Commands.next();
-    if (arg != NULL)
-    {
-        val = atoi(arg);
-        if (val != 0)
-        {
-            // 火力开关 ON
-            digitalWrite(HEAT_RLY, HIGH); // 操作IO口，HMI 图标更新走内部处理
-            Serial.printf("HMI turn heat ON fan \n");
-        }
-        else
-        {                                // 火力开关 OFF
-            digitalWrite(HEAT_RLY, LOW); ////操作IO口，HMI 图标更新走内部处理
-            Serial.printf("HMI turn heat OFF fan \n");
-        }
-    }
-}
 
-void cmd_COOL()
-{
-    int val;
-    char *arg;
-    arg = HMI_Commands.next();
-    if (arg != NULL)
-    {
-        val = atoi(arg);
-        if (val != 0)
-        {
-            // 风扇开关 ON
-            digitalWrite(FAN_RLY, HIGH); // 操作IO口，HMI 图标更新走内部处理
-            mb.Hreg(FAN_HREG, 1);        // 更新 Modbus 的Herg
-            Serial.printf("HMI turn fan ON fan \n");
-        }
-        else
-        { // 风扇开关 OFF
+// HMI --> HB的 命令帧 FrameLenght = 9
+// 帧头: 67 FF
+// 类型:03 控制数据
+// 火力: 00  // uint8
+// 火力开关: 00 // uint8
+// 冷却开关: 00 // uint8
+// 帧尾:FF FF FF 
 
-            digitalWrite(FAN_RLY, LOW); ////操作IO口，HMI 图标更新走内部处理
-            mb.Hreg(FAN_HREG, 0);       // 更新 Modbus 的Herg
-            Serial.printf("HMI turn fan OFF fan \n");
-        }
-    }
-}
-
-void cmd_PID_MODE()
-{
-    int val;
-    char *arg;
-    arg = HMI_Commands.next();
-    if (arg != NULL)
-    {
-        val = atoi(arg);
-        if (val != 0)
-        {
-            // PID 模式开关 ON
-        }
-        else
-        { // PID 模式开关 OFF
-        }
-    }
-}
-
-void cmd_PWR()
-{
-}
-
-void cmd_PID_SV()
-{
-}
-
-void cmd_PID_P()
-{
-}
-
-void cmd_PID_I()
-{
-}
-void cmd_PID_D()
-{
-}
-
+//温度为小端模式   dec 2222  hex AE 08
 #endif

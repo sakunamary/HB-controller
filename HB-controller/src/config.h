@@ -42,35 +42,10 @@
 #define HMI_TX 17
 #define HMI_RX 16
 
-const int BUFFER_SIZE = 32;
+const int BUFFER_SIZE = 16;
 
 // parametsrs of MAX31865
 #define RREF 430.0
 #define RNOMINAL 100.0
-
-// 网页设置的参数
-typedef struct S_data_frame
-{
-    double BT_TEMP;
-    double ET_TEMP;
-    double INLET_TEMP;
-    double EX_TEMP;
-    int HEAT_SWITCH;
-    int FAN_SWITCH;
-    int HEAT_PWR;
-} S_data_frame_t;
-
-//extern S_data_frame_t user_wifi;
-
-// user_wifi_t user_wifi = {
-// BT_TEMP = 0.0;
-// ET_TEMP = 0.0;
-// INLET_TEMP = 0.0;
-// EX_TEMP = 0.0;
-// HEAT_SWITCH = 0;
-// FAN_SWITCH = 0;
-// HEAT_PWR = 0;
-// }
-// ;
 
 #endif

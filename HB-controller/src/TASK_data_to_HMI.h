@@ -23,7 +23,7 @@ void TASK_data_to_HMI(void *pvParameters)
 
             Serial_HMI.print((char *)Serial_DATA_Buffer);
             memset(Serial_DATA_Buffer, '\0', sizeof(Serial_DATA_Buffer));
-            vTaskDelay(20);
+            //vTaskDelay(20);
         }
     }
 }
