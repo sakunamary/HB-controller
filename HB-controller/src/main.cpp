@@ -4,7 +4,7 @@
 #include "TASK_read_temp.h"
 #include "TASK_data_to_HMI.h"
 #include "TASK_modbus_control.h"
-#include "CMD_from_HMI_handle.h"
+#include "TASK_CMD_from_HMI_handle.h"
 
 String local_IP;
 
@@ -15,7 +15,7 @@ void setup()
 {
 
     xThermoDataMutex = xSemaphoreCreateMutex();
-    // xSerialReadBufferMutex = xSemaphoreCreateMutex();
+    xSerialReadBufferMutex = xSemaphoreCreateMutex();
 
     pinMode(SYSTEM_RLY, OUTPUT);
     pinMode(FAN_RLY, OUTPUT);
@@ -71,7 +71,7 @@ void setup()
     xTaskCreatePinnedToCore(
         Task_modbus_control, "modbus_control" //
         ,
-        1024 * 4 // This stack size can be checked & adjusted by reading the Stack Highwater
+        1024 * 8 // This stack size can be checked & adjusted by reading the Stack Highwater
         ,
         NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
         ,
@@ -81,18 +81,18 @@ void setup()
     Serial.printf("\nTASK=3:modbus_control OK");
 #endif
 
-    //     xTaskCreatePinnedToCore(
-    //         TASK_CMD_From_HMI, "CMD_From_HMI" //
-    //         ,
-    //         1024 * 2 // This stack size can be checked & adjusted by reading the Stack Highwater
-    //         ,
-    //         NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    //         ,
-    //         NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    //     );
-    // #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    //     Serial.printf("\nTASK=4:CMD_From_HMI OK");
-    // #endif
+    xTaskCreatePinnedToCore(
+        TASK_CMD_From_HMI, "CMD_From_HMI" //
+        ,
+        1024 * 8 // This stack size can be checked & adjusted by reading the Stack Highwater
+        ,
+        NULL, 4 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+        ,
+        NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+    );
+#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+    Serial.printf("\nTASK=4:CMD_From_HMI OK");
+#endif
 
     // 初始化网络服务
     WiFi.macAddress(macAddr);
@@ -136,6 +136,7 @@ void setup()
     mb.addHreg(EXHAUST_HREG);
 
     mb.addHreg(HEAT_HREG);
+    mb.addHreg(FAN_HREG);
 
     // mb.addHreg(SV_HREG);
     // mb.addHreg(PID_HREG);
@@ -149,6 +150,7 @@ void setup()
     mb.Hreg(EXHAUST_HREG, 0); // 初始化赋值
 
     mb.Hreg(HEAT_HREG, 0); // 初始化赋值
+    mb.Hreg(FAN_HREG, 0);  // 初始化赋值
 
     // mb.Hreg(SV_HREG, 0);      // 初始化赋值
     // mb.Hreg(PID_HREG, 0);     // 初始化赋值

@@ -18,17 +18,20 @@ const uint16_t HEAT_HREG = 3005;
 // const uint16_t PID_P_HREG = 3008;
 // const uint16_t PID_I_HREG = 3009;
 // const uint16_t PID_D_HREG = 3010;
-// const uint16_t FAN_HREG = 3011;
+const uint16_t FAN_HREG = 3011;
 
 uint16_t last_PWR;
+bool fan_status;
+bool heat_status;
 // uint16_t last_SV;
 //  uint16_t last_PID_P;
 //  uint16_t last_PID_I;
 //  uint16_t last_PID_D;
 
-int heat_level_to_artisan = 0;
+int heat_pwr_to_SSR = 0;
+
 bool init_status = true;
-bool pid_on_status = false;
+// bool pid_on_status = false;
 
 void Task_modbus_control(void *pvParameters)
 { // function
@@ -46,39 +49,77 @@ void Task_modbus_control(void *pvParameters)
     {        // for loop
         vTaskDelayUntil(&xLastWakeTime, xIntervel);
 
+        fan_status = digitalRead(FAN_RLY);
+        heat_status = digitalRead(HEAT_RLY);
+
         if (init_status)
         {
-            last_PWR = mb.Hreg(HEAT_HREG);
-            // send temp data to queue to HMI
-            if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
+            //
+            if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) //
             {
                 last_PWR = mb.Hreg(HEAT_HREG);
-                heat_level_to_artisan = 0;
-                sprintf(CMD_DATA_Buffer, "num_pwr.val=%d\xff\xff\xff", last_PWR);
-                xQueueSend(queue_data_to_HMI, &CMD_DATA_Buffer, xIntervel);
-                //Serial.printf("pwr(in task_modbus_control):%d\n", heat_level_to_artisan);
-
-                xSemaphoreGive(xThermoDataMutex); // end of lock mutex
+                heat_pwr_to_SSR = 0;
+                make_frame_data(TEMP_DATA_Buffer, 0x02, mb.Hreg(HEAT_HREG), 3);
+                xSemaphoreGive(xThermoDataMutex);                                                       // end of lock mutex
+                pwm.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 230, 850), frequency, resolution); // 自动模式下，将heat数值转换后输出到pwm
             }
             init_status = false;
         }
         else
         {
-            if (last_PWR != mb.Hreg(HEAT_HREG)) // 发生变动
+            if (mb.Hreg(HEAT_HREG)！= last_PWR) // 火力pwr数值发生变动
             {
-
                 if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
                 {
-                    heat_level_to_artisan = mb.Hreg(HEAT_HREG);
-                    last_PWR = heat_level_to_artisan;
-                    sprintf(CMD_DATA_Buffer, "num_pwr.val=%d\xff\xff\xff", last_PWR);
-                    xQueueSend(queue_data_to_HMI, &CMD_DATA_Buffer, xIntervel);
-                    //Serial.printf("pwr(in task_modbus_control):%d\n", heat_level_to_artisan);
-
-                    xSemaphoreGive(xThermoDataMutex); // end of lock mutex
+                    last_PWR = mb.Hreg(HEAT_HREG);                                                          // last 火力pwr数据更新
+                    heat_level_to_artisan = last_PWR;                                                       // 发送新火力pwr数据到 SSR
+                    make_frame_data(TEMP_DATA_Buffer, 0x02, last_PWR, 3);                                   // 将新火力pwr数据发送到HMI run_status 帧
+                    pwm.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 230, 850), frequency, resolution); // 输出新火力pwr到SSR
                 }
             }
+        }
+        if (digitalRead(FAN_RLY) != fan_status) // 风扇开关状态发生变动
+        {
+            fan_status = digitalRead(FAN_RLY); // 保存现状到fan_status
+            mb.Hreg(FAN_HREG, fan_status);     // 更新FAN_HREG的值
+        }
+
+        if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 整合数据帧到HMI
+        {
+            make_frame_head(TEMP_DATA_Buffer, 0x02);//帧头
+            make_frame_data(TEMP_DATA_Buffer, 0x02, digitalRead(HEAT_RLY), 4); //加热管状态数据
+            make_frame_data(TEMP_DATA_Buffer, 0x02, fan_status, 5);//冷却扇状态数据
+            make_frame_end(TEMP_DATA_Buffer, 0x02);//帧微
+            xQueueSendToFront(queue_data_to_HMI, &CMD_DATA_Buffer, xIntervel);
+            xSemaphoreGive(xThermoDataMutex); // end of lock mutex
         }
     }
 }
 #endif
+
+// HB --> HMI的数据帧 FrameLenght = 14
+// 帧头: 69 FF
+// 类型: 01温度数据
+// BT: 00 00 // uint16
+// Inlet: 00 00 // uint16
+// EX: 00 00 // uint16
+// ET: 00 00 // uint16
+// 帧尾:FF FF FF
+
+// HB --> HMI的控制状态帧 FrameLenght = 9
+// 帧头: 67 FF
+// 类型:02控制数据
+// 火力: 00  // uint8
+// 火力开关: 00 // uint8
+// 冷却开关: 00 // uint8
+// 帧尾:FF FF FF
+
+// HMI --> HB的 命令帧 FrameLenght = 9
+// 帧头: 67 FF
+// 类型:03 控制数据
+// 火力: 00  // uint8
+// 火力开关: 00 // uint8
+// 冷却开关: 00 // uint8
+// 帧尾:FF FF FF
+
+// 温度为小端模式   dec 2222  hex AE 08

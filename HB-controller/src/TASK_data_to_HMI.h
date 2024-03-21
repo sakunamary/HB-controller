@@ -11,7 +11,7 @@ void TASK_data_to_HMI(void *pvParameters)
     (void)pvParameters;
     TickType_t xLastWakeTime;
     uint8_t Serial_DATA_Buffer[BUFFER_SIZE];
-    const TickType_t timeout = 500;
+    const TickType_t timeout = 200;
     const TickType_t xIntervel = 100 / portTICK_PERIOD_MS;
     xLastWakeTime = xTaskGetTickCount();
 
@@ -20,10 +20,8 @@ void TASK_data_to_HMI(void *pvParameters)
         vTaskDelayUntil(&xLastWakeTime, xIntervel);
         if (xQueueReceive(queue_data_to_HMI, &Serial_DATA_Buffer, timeout) == pdPASS)
         { // 从接收QueueCMD 接收指令
-
-            Serial_HMI.print((char *)Serial_DATA_Buffer);
-            memset(Serial_DATA_Buffer, '\0', sizeof(Serial_DATA_Buffer));
-            //vTaskDelay(20);
+            Serial_HMI.write(Serial_DATA_Buffer，sizeof(Serial_DATA_Buffer));
+            vTaskDelay(20);
         }
     }
 }

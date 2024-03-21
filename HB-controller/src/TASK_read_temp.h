@@ -80,25 +80,15 @@ void Task_Thermo_get_data(void *pvParameters)
 
 #if defined(MODEL_M6S)
         mb.Hreg(ET_HREG, int(round(ET_TEMP * 10))); // 初始化赋值
-        TEMP_DATA_Buffer[9] = lowByte(int(round(ET_TEMP * 10)));
-        TEMP_DATA_Buffer[10] = highByte(int(round(ET_TEMP * 10)));
+        make_frame_data(TEMP_DATA_Buffer, 0x01, ET_TEMP, 9);
 #else
-        TEMP_DATA_Buffer[9] = 0x00;
-        TEMP_DATA_Buffer[10] = 0x00;
+        make_frame_data(TEMP_DATA_Buffer, 0x01, 0, 9);
 #endif
-        TEMP_DATA_Buffer[0] = 0x69; // frame head
-        TEMP_DATA_Buffer[1] = 0xff; // frame head
-        TEMP_DATA_Buffer[2] = 0x01; // data type
-        TEMP_DATA_Buffer[3] = lowByte(int(round(BT_TEMP * 10)));
-        TEMP_DATA_Buffer[4] = highByte(int(round(BT_TEMP * 10)));
-        TEMP_DATA_Buffer[5] = lowByte(int(round(INLET_HREG * 10)));
-        TEMP_DATA_Buffer[6] = highByte(int(round(INLET_HREG * 10)));
-        TEMP_DATA_Buffer[7] = lowByte(int(round(INLET_HREG * 10)));
-        TEMP_DATA_Buffer[8] = highByte(int(round(INLET_HREG * 10)));
-        TEMP_DATA_Buffer[11] = 0xff; // frame end
-        TEMP_DATA_Buffer[12] = 0xff; // frame end
-        TEMP_DATA_Buffer[13] = 0xff; // frame end
-
+        make_frame_head(TEMP_DATA_Buffer,0x01);
+        make_frame_end(TEMP_DATA_Buffer, 0x01);
+        make_frame_data(TEMP_DATA_Buffer, 0x01, BT_TEMP, 3);
+        make_frame_data(TEMP_DATA_Buffer, 0x01, INLET_HREG, 5);
+        make_frame_data(TEMP_DATA_Buffer, 0x01, EX_TEMP, 7);
         xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 3);
     }
 
