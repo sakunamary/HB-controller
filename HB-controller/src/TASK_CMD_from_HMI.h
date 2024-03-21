@@ -35,7 +35,7 @@ void TASK_CMD_From_HMI(void *pvParameters)
 
     while (Serial_HMI.available() >= BUFFER_SIZE)
     {
-        vTaskDelayUntil(&xLastWakeTime, xIntervel);
+       // vTaskDelayUntil(&xLastWakeTime, xIntervel);
         // 从串口缓冲读取1个字节但不删除
         // HMI_ReadBuffer[0] = Serial_HMI.peek();
         Serial_HMI.readBytes(HMI_ReadBuffer, BUFFER_SIZE);
