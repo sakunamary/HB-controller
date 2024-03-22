@@ -35,46 +35,50 @@ void TASK_CMD_From_HMI(void *pvParameters)
 
     while (Serial_HMI.available() >= BUFFER_SIZE)
     {
-       // vTaskDelayUntil(&xLastWakeTime, xIntervel);
+        // vTaskDelayUntil(&xLastWakeTime, xIntervel);
         // 从串口缓冲读取1个字节但不删除
         // HMI_ReadBuffer[0] = Serial_HMI.peek();
         Serial_HMI.readBytes(HMI_ReadBuffer, BUFFER_SIZE);
         // 当获取的数据是包头(0x67 FF )时
         if (HMI_ReadBuffer[0] == 0x67 && HMI_ReadBuffer[1] == 0xFF)
         {
-
         }
         else
         {
             Serial_HMI.read(); // 从串口缓冲读取1个字节并删除
-            memset(HMI_ReadBuffer,'\0',BUFFER_SIZE);
+            memset(HMI_ReadBuffer, '\0', BUFFER_SIZE);
         }
     }
 }
 
-// HB --> HMI的数据帧 FrameLenght = 14
+// HB --> HMI的数据帧 FrameLenght = 16
 // 帧头: 69 FF
 // 类型: 01温度数据
 // 温度1: 00 00 // uint16
 // 温度2: 00 00 // uint16
 // 温度3: 00 00 // uint16
 // 温度4: 00 00 // uint16
+// NULL: 00 00
 // 帧尾:FF FF FF
 
-// HB --> HMI的控制状态帧 FrameLenght = 9
-// 帧头: 67 FF
+// HB --> HMI的控制状态帧 FrameLenght = 16
+// 帧头: 69 FF
 // 类型:02控制数据
-// 火力: 00  // uint8
-// 火力开关: 00 // uint8
-// 冷却开关: 00 // uint8
+// 火力: 00 00 // uint16
+// 火力开关: 00 00 // uint16
+// 冷却开关: 00 00 // uint16
+// NULL: 00 00 // uint16
+// NULL: 00 00 // uint16
 // 帧尾:FF FF FF
 
-// HMI --> HB的 命令帧 FrameLenght = 9
+// HMI --> HB的 命令帧 FrameLenght = 16
 // 帧头: 67 FF
 // 类型:03 控制数据
-// 火力: 00  // uint8
-// 火力开关: 00 // uint8
-// 冷却开关: 00 // uint8
+// 火力: 00  00 // uint16
+// 火力开关: 00 00// uint16
+// 冷却开关: 00 00// uint16
+// NULL: 00 00 // uint16
+// NULL: 00 00 // uint16
 // 帧尾:FF FF FF
 
 // 温度为小端模式   dec 2222  hex AE 08

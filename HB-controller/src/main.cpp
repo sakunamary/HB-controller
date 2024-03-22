@@ -15,7 +15,7 @@ void setup()
 {
 
     xThermoDataMutex = xSemaphoreCreateMutex();
-    xSerialReadBufferMutex = xSemaphoreCreateMutex();
+    //xSerialReadBufferMutex = xSemaphoreCreateMutex();
 
     pinMode(SYSTEM_RLY, OUTPUT);
     pinMode(FAN_RLY, OUTPUT);

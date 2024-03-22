@@ -48,7 +48,6 @@ const int BUFFER_SIZE = 16;
 #define RREF 430.0
 #define RNOMINAL 100.0
 
-
 // publc funciton
 
 uint8_t make_frame_head(uint8_t data_array[BUFFER_SIZE], int cmd_type)
@@ -80,20 +79,30 @@ uint8_t make_frame_end(uint8_t data_array[BUFFER_SIZE], int cmd_type)
 
     switch (cmd_type)
     {
-    case 1:                    // data_frame
-        data_array[11] = 0xff; // frame end
-        data_array[12] = 0xff; // frame end
+    case 1: // data_frame
+
+        data_array[12] = 0x00; // frame end
         data_array[13] = 0xff; // frame end
+        data_array[14] = 0xff; // frame end
+        data_array[15] = 0xff; // frame end
         break;
-    case 2:                   // run_status
-        data_array[6] = 0xff; // frame end
-        data_array[7] = 0xff; // frame end
-        data_array[8] = 0xff; // frame end
+    case 2:                    // run_status     
+        data_array[19] = 0x00; // frame end
+        data_array[10] = 0x00; // frame end
+        data_array[11] = 0x00; // frame end
+        data_array[12] = 0x00; // frame end
+        data_array[13] = 0xff; // frame end
+        data_array[14] = 0xff; // frame end
+        data_array[15] = 0xff; // frame end
         break;
-    case 3:                   // HMI_cmd
-        data_array[6] = 0xff; // frame end
-        data_array[7] = 0xff; // frame end
-        data_array[8] = 0xff; // frame end
+    case 3:                    // HMI_cmd
+        data_array[19] = 0x00; // frame end
+        data_array[10] = 0x00; // frame end
+        data_array[11] = 0x00; // frame end
+        data_array[12] = 0x00; // frame end
+        data_array[13] = 0xff; // frame end
+        data_array[14] = 0xff; // frame end
+        data_array[15] = 0xff; // frame end
         break;
     default:
         break;
@@ -101,7 +110,7 @@ uint8_t make_frame_end(uint8_t data_array[BUFFER_SIZE], int cmd_type)
     return data_array[BUFFER_SIZE];
 }
 
-uint8_t make_frame_data(uint8_t data_array[BUFFER_SIZE], int cmd_type, uint16_t in_val, int uBit)
+uint8_t make_frame_data (uint8_t data_array[BUFFER_SIZE], int cmd_type, uint16_t in_val, int uBit)
 // pagkage the data frame.cmd_type:1/data_frame;2/run_status;3/HMI_cmd
 {
     uint8_t high = highByte(in_val);
@@ -136,30 +145,34 @@ uint8_t make_frame_data(uint8_t data_array[BUFFER_SIZE], int cmd_type, uint16_t 
 }
 
 #endif
-
-// HB --> HMI的数据帧 FrameLenght = 14
+// HB --> HMI的数据帧 FrameLenght = 16
 // 帧头: 69 FF
 // 类型: 01温度数据
-// BT: 00 00 // uint16
-// Inlet: 00 00 // uint16
-// EX: 00 00 // uint16
-// ET: 00 00 // uint16
+// 温度1: 00 00 // uint16
+// 温度2: 00 00 // uint16
+// 温度3: 00 00 // uint16
+// 温度4: 00 00 // uint16
+// NULL: 00 00
 // 帧尾:FF FF FF
 
-// HB --> HMI的控制状态帧 FrameLenght = 9
-// 帧头: 67 FF
+// HB --> HMI的控制状态帧 FrameLenght = 16
+// 帧头: 69 FF
 // 类型:02控制数据
-// 火力: 00  // uint8
-// 火力开关: 00 // uint8
-// 冷却开关: 00 // uint8
+// 火力: 00 00 // uint16
+// 火力开关: 00 00 // uint16
+// 冷却开关: 00 00 // uint16
+// NULL: 00 00 // uint16
+// NULL: 00 00 // uint16
 // 帧尾:FF FF FF
 
-// HMI --> HB的 命令帧 FrameLenght = 9
-// 帧头: 67 FF
+// HMI --> HB的 命令帧 FrameLenght = 16
+// 帧头: 69 FF
 // 类型:03 控制数据
-// 火力: 00  // uint8
-// 火力开关: 00 // uint8
-// 冷却开关: 00 // uint8
+// 火力: 00  00 // uint16
+// 火力开关: 00 00// uint16
+// 冷却开关: 00 00// uint16
+// NULL: 00 00 // uint16
+// NULL: 00 00 // uint16
 // 帧尾:FF FF FF
 
 // 温度为小端模式   dec 2222  hex AE 08
