@@ -21,9 +21,9 @@
 #define BAUDRATE 115200        // serial port baudrate
 #define BAUD_HMI 9600
 // pinout define
-#define ENC_BUTTON 34
-#define ENC_CLK 32
-#define ENC_DT 35
+// #define ENC_BUTTON 34
+// #define ENC_CLK 32
+// #define ENC_DT 35
 
 #define SPI_MISO 19
 #define SPI_SCK 18
@@ -87,7 +87,7 @@ uint8_t make_frame_end(uint8_t data_array[BUFFER_SIZE], int cmd_type)
         data_array[15] = 0xff; // frame end
         break;
     case 2:                    // run_status     
-        data_array[19] = 0x00; // frame end
+        data_array[9] = 0x00; // frame end
         data_array[10] = 0x00; // frame end
         data_array[11] = 0x00; // frame end
         data_array[12] = 0x00; // frame end
@@ -96,7 +96,7 @@ uint8_t make_frame_end(uint8_t data_array[BUFFER_SIZE], int cmd_type)
         data_array[15] = 0xff; // frame end
         break;
     case 3:                    // HMI_cmd
-        data_array[19] = 0x00; // frame end
+        data_array[9] = 0x00; // frame end
         data_array[10] = 0x00; // frame end
         data_array[11] = 0x00; // frame end
         data_array[12] = 0x00; // frame end
@@ -166,7 +166,7 @@ uint8_t make_frame_data (uint8_t data_array[BUFFER_SIZE], int cmd_type, uint16_t
 // 帧尾:FF FF FF
 
 // HMI --> HB的 命令帧 FrameLenght = 16
-// 帧头: 69 FF
+// 帧头: 67 FF
 // 类型:03 控制数据
 // 火力: 00  00 // uint16
 // 火力开关: 00 00// uint16

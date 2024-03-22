@@ -4,7 +4,7 @@
 #include "TASK_read_temp.h"
 #include "TASK_data_to_HMI.h"
 #include "TASK_modbus_control.h"
-#include "TASK_CMD_from_HMI_handle.h"
+// #include "TASK_CMD_from_HMI.h"
 
 String local_IP;
 
@@ -15,7 +15,7 @@ void setup()
 {
 
     xThermoDataMutex = xSemaphoreCreateMutex();
-    //xSerialReadBufferMutex = xSemaphoreCreateMutex();
+    xSerialReadBufferMutex = xSemaphoreCreateMutex();
 
     pinMode(SYSTEM_RLY, OUTPUT);
     pinMode(FAN_RLY, OUTPUT);
@@ -58,7 +58,7 @@ void setup()
     xTaskCreatePinnedToCore(
         TASK_data_to_HMI, "data_to_HMI" //
         ,
-        1024 * 4 // This stack size can be checked & adjusted by reading the Stack Highwater
+        1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
         ,
         NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
         ,
@@ -71,7 +71,7 @@ void setup()
     xTaskCreatePinnedToCore(
         Task_modbus_control, "modbus_control" //
         ,
-        1024 * 8 // This stack size can be checked & adjusted by reading the Stack Highwater
+        1024 * 10 // This stack size can be checked & adjusted by reading the Stack Highwater
         ,
         NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
         ,
@@ -81,18 +81,21 @@ void setup()
     Serial.printf("\nTASK=3:modbus_control OK");
 #endif
 
+
+
     xTaskCreatePinnedToCore(
-        TASK_CMD_From_HMI, "CMD_From_HMI" //
+        TASK_CMD_HMI, "CMD_HMI" //
         ,
-        1024 * 8 // This stack size can be checked & adjusted by reading the Stack Highwater
+        1024 * 2 // This stack size can be checked & adjusted by reading the Stack Highwater
         ,
-        NULL, 4 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+        NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
         ,
         NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    Serial.printf("\nTASK=4:CMD_From_HMI OK");
+    Serial.printf("\nTASK=4:CMD_HMI OK");
 #endif
+
 
     // 初始化网络服务
     WiFi.macAddress(macAddr);
@@ -161,6 +164,8 @@ void setup()
     ////////////////////////////////////////////////////////////////
 
     digitalWrite(SYSTEM_RLY, HIGH); // 启动机器
+
+    vTaskDelete(NULL);
 }
 
 void loop()

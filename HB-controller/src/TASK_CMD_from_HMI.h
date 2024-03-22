@@ -33,22 +33,22 @@ void TASK_CMD_From_HMI(void *pvParameters)
     //     }
     // }
 
-    while (Serial_HMI.available() >= BUFFER_SIZE)
-    {
-        // vTaskDelayUntil(&xLastWakeTime, xIntervel);
-        // 从串口缓冲读取1个字节但不删除
-        // HMI_ReadBuffer[0] = Serial_HMI.peek();
-        Serial_HMI.readBytes(HMI_ReadBuffer, BUFFER_SIZE);
-        // 当获取的数据是包头(0x67 FF )时
-        if (HMI_ReadBuffer[0] == 0x67 && HMI_ReadBuffer[1] == 0xFF)
-        {
-        }
-        else
-        {
-            Serial_HMI.read(); // 从串口缓冲读取1个字节并删除
-            memset(HMI_ReadBuffer, '\0', BUFFER_SIZE);
-        }
-    }
+    // while (Serial_HMI.available() >= BUFFER_SIZE)
+    // {
+    //     // vTaskDelayUntil(&xLastWakeTime, xIntervel);
+    //     // 从串口缓冲读取1个字节但不删除
+    //     // HMI_ReadBuffer[0] = Serial_HMI.peek();
+    //     Serial_HMI.readBytes(HMI_ReadBuffer, BUFFER_SIZE);
+    //     // 当获取的数据是包头(0x67 FF )时
+    //     if (HMI_ReadBuffer[0] == 0x67 && HMI_ReadBuffer[1] == 0xFF)
+    //     {
+    //     }
+    //     else
+    //     {
+    //         Serial_HMI.read(); // 从串口缓冲读取1个字节并删除
+    //         memset(HMI_ReadBuffer, '\0', BUFFER_SIZE);
+    //     }
+    // }
 }
 
 // HB --> HMI的数据帧 FrameLenght = 16

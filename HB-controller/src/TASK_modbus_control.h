@@ -39,7 +39,7 @@ void Task_modbus_control(void *pvParameters)
     /* Variable Definition */
     (void)pvParameters;
     TickType_t xLastWakeTime;
-    char CMD_DATA_Buffer[BUFFER_SIZE];
+    uint8_t CMD_DATA_Buffer[BUFFER_SIZE];
     const TickType_t xIntervel = 100 / portTICK_PERIOD_MS;
     /* Task Setup and Initialize */
     // Initial the xLastWakeTime variable with the current time.
@@ -59,25 +59,24 @@ void Task_modbus_control(void *pvParameters)
             {
                 last_PWR = mb.Hreg(HEAT_HREG);
                 heat_pwr_to_SSR = 0;
-                make_frame_data(TEMP_DATA_Buffer, 0x02, mb.Hreg(HEAT_HREG), 3);
-                xSemaphoreGive(xThermoDataMutex);                                                       // end of lock mutex
-                pwm.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 230, 850), frequency, resolution); // 自动模式下，将heat数值转换后输出到pwm
+                make_frame_data(CMD_DATA_Buffer, 2, last_PWR, 3);
+                xSemaphoreGive(xThermoDataMutex); // end of lock mutex
             }
             init_status = false;
         }
         else
         {
-            if (mb.Hreg(HEAT_HREG)！= last_PWR) // 火力pwr数值发生变动
+            if (mb.Hreg(HEAT_HREG) != last_PWR) // 火力pwr数值发生变动
             {
                 if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
                 {
-                    last_PWR = mb.Hreg(HEAT_HREG);                                                          // last 火力pwr数据更新
-                    heat_level_to_artisan = last_PWR;                                                       // 发送新火力pwr数据到 SSR
-                    make_frame_data(TEMP_DATA_Buffer, 0x02, last_PWR, 3);                                   // 将新火力pwr数据发送到HMI run_status 帧
-                    pwm.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 230, 850), frequency, resolution); // 输出新火力pwr到SSR
+                    last_PWR = mb.Hreg(HEAT_HREG);                       // last 火力pwr数据更新
+                    heat_pwr_to_SSR = last_PWR;                          // 发送新火力pwr数据到 SSR
+                    make_frame_data(CMD_DATA_Buffer, 2, last_PWR, 3); // 将新火力pwr数据发送到HMI run_status 帧
                 }
             }
         }
+
         if (digitalRead(FAN_RLY) != fan_status) // 风扇开关状态发生变动
         {
             fan_status = digitalRead(FAN_RLY); // 保存现状到fan_status
@@ -86,13 +85,14 @@ void Task_modbus_control(void *pvParameters)
 
         if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 整合数据帧到HMI
         {
-            make_frame_head(TEMP_DATA_Buffer, 0x02);//帧头
-            make_frame_data(TEMP_DATA_Buffer, 0x02, digitalRead(HEAT_RLY), 4); //加热管状态数据
-            make_frame_data(TEMP_DATA_Buffer, 0x02, fan_status, 5);//冷却扇状态数据
-            make_frame_end(TEMP_DATA_Buffer, 0x02);//帧微
+            make_frame_head(CMD_DATA_Buffer, 2);                           // 帧头
+            make_frame_data(CMD_DATA_Buffer, 2, digitalRead(HEAT_RLY), 5); // 加热管状态数据
+            make_frame_data(CMD_DATA_Buffer, 2, fan_status, 7);            // 冷却扇状态数据
+            make_frame_end(CMD_DATA_Buffer, 2);                            // 帧微
             xQueueSendToFront(queue_data_to_HMI, &CMD_DATA_Buffer, xIntervel);
             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
         }
+        // pwm_heat.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 230, 850), frequency, resolution); // 输出新火力pwr到SSR
     }
 }
 #endif
