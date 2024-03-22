@@ -14,7 +14,7 @@ void setup()
 {
 
     xThermoDataMutex = xSemaphoreCreateMutex();
-    // xSerialReadBufferMutex = xSemaphoreCreateMutex();
+    xSerialReadBufferMutex = xSemaphoreCreateMutex();
 
     pinMode(SYSTEM_RLY, OUTPUT);
     pinMode(FAN_RLY, OUTPUT);
@@ -28,9 +28,9 @@ void setup()
 
     Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
 
-    #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-        Serial.printf("\nSerial Started");
-    #endif
+#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+    Serial.printf("\nSerial Started");
+#endif
 
     // INIT SENSOR
     thermo_INLET.begin(MAX31865_2WIRE); // set to 2WIRE or 4WIRE as necessary
@@ -109,7 +109,7 @@ void setup()
 #endif
 
     xTaskCreatePinnedToCore(
-        TASK_CMD_HMI, "CMD_HMI" //
+        TASK_CMD_FROM_HMI, "TCMD_FROM_HMI" //
         ,
         1024 * 2 // This stack size can be checked & adjusted by reading the Stack Highwater
         ,
@@ -118,7 +118,20 @@ void setup()
         &xTASK_CMD_HMI, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    Serial.printf("\nTASK=4:CMD_HMI OK");
+    Serial.printf("\nTASK=4:CMD_FROM_HMI OK");
+#endif
+
+    xTaskCreatePinnedToCore(
+        TASK_HMI_CMD_handle, "handle_CMD_FROM_HMI" //
+        ,
+        1024 * 8 // This stack size can be checked & adjusted by reading the Stack Highwater
+        ,
+        NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+        ,
+        &xTASK_HMI_CMD_handle, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+    );
+#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+    Serial.printf("\nTASK=5:handle_CMD_FROM_HMI OK");
 #endif
 
     // INIT MODBUS
@@ -162,7 +175,6 @@ void setup()
     ////////////////////////////////////////////////////////////////
 
     digitalWrite(SYSTEM_RLY, HIGH); // 启动机器
-
 }
 
 void loop()

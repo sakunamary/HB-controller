@@ -86,8 +86,8 @@ uint8_t make_frame_end(uint8_t data_array[BUFFER_SIZE], int cmd_type)
         data_array[14] = 0xff; // frame end
         data_array[15] = 0xff; // frame end
         break;
-    case 2:                    // run_status     
-        data_array[9] = 0x00; // frame end
+    case 2:                    // run_status
+        data_array[9] = 0x00;  // frame end
         data_array[10] = 0x00; // frame end
         data_array[11] = 0x00; // frame end
         data_array[12] = 0x00; // frame end
@@ -96,7 +96,7 @@ uint8_t make_frame_end(uint8_t data_array[BUFFER_SIZE], int cmd_type)
         data_array[15] = 0xff; // frame end
         break;
     case 3:                    // HMI_cmd
-        data_array[9] = 0x00; // frame end
+        data_array[9] = 0x00;  // frame end
         data_array[10] = 0x00; // frame end
         data_array[11] = 0x00; // frame end
         data_array[12] = 0x00; // frame end
@@ -110,7 +110,7 @@ uint8_t make_frame_end(uint8_t data_array[BUFFER_SIZE], int cmd_type)
     return data_array[BUFFER_SIZE];
 }
 
-uint8_t make_frame_data (uint8_t data_array[BUFFER_SIZE], int cmd_type, uint16_t in_val, int uBit)
+uint8_t make_frame_data(uint8_t data_array[BUFFER_SIZE], int cmd_type, uint16_t in_val, int uBit)
 // pagkage the data frame.cmd_type:1/data_frame;2/run_status;3/HMI_cmd
 {
     uint8_t high = highByte(in_val);
@@ -144,9 +144,15 @@ uint8_t make_frame_data (uint8_t data_array[BUFFER_SIZE], int cmd_type, uint16_t
     return data_array[BUFFER_SIZE];
 }
 
-
 static TaskHandle_t xTASK_data_to_HMI = NULL;
 static TaskHandle_t xTASK_CMD_HMI = NULL;
+static TaskHandle_t xTASK_HMI_CMD_handle = NULL;
+
+SemaphoreHandle_t xThermoDataMutex = NULL;
+SemaphoreHandle_t xSerialReadBufferMutex = NULL;
+
+QueueHandle_t queue_data_to_HMI = xQueueCreate(15, sizeof(uint8_t[BUFFER_SIZE])); // 发送到TC4的命令队列
+QueueHandle_t queueCMD = xQueueCreate(15, sizeof(uint8_t[BUFFER_SIZE]));          // 发送到TC4的命令队列
 
 #endif
 // HB --> HMI的数据帧 FrameLenght = 16

@@ -16,8 +16,8 @@ double ET_TEMP;
 double INLET_TEMP;
 double EX_TEMP;
 
-SemaphoreHandle_t xThermoDataMutex = NULL;
-QueueHandle_t queue_data_to_HMI = xQueueCreate(15, sizeof(uint8_t[BUFFER_SIZE])); // 发送到TC4的命令队列
+
+
 
 MAX6675 thermo_EX(SPI_SCK, SPI_CS_EX, SPI_MISO); // CH2  thermoEX
 

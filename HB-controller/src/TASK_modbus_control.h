@@ -89,7 +89,7 @@ void Task_modbus_control(void *pvParameters)
         // HEAT
         if (mb.Hreg(HEAT_HREG) != digitalRead(HEAT_RLY)) // 风扇开关状态发生变动
         {
-            digitalWrite(HEAT_RLY, !digitalRead(FHEAT_RLY));           // 将artisan的控制值控制开关
+            digitalWrite(HEAT_RLY, !digitalRead(HEAT_RLY));           // 将artisan的控制值控制开关
             if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 整合数据帧到HMI
             {
                 make_frame_head(CMD_DATA_Buffer, 2);                           // 帧头
