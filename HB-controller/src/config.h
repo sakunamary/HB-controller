@@ -126,13 +126,13 @@ uint8_t make_frame_data (uint8_t data_array[BUFFER_SIZE], int cmd_type, uint16_t
 
         break;
     case 2:
-        if (uBit > 2 && uBit < 6)
+        if (uBit > 2 && uBit < 9)
         {
             data_array[uBit] = low; // frame end
         }
         break;
     case 3:
-        if (uBit > 2 && uBit < 6)
+        if (uBit > 2 && uBit < 9)
         {
             data_array[uBit] = low; // frame end
         }
@@ -143,6 +143,10 @@ uint8_t make_frame_data (uint8_t data_array[BUFFER_SIZE], int cmd_type, uint16_t
     }
     return data_array[BUFFER_SIZE];
 }
+
+
+static TaskHandle_t xTASK_data_to_HMI = NULL;
+static TaskHandle_t xTASK_CMD_HMI = NULL;
 
 #endif
 // HB --> HMI的数据帧 FrameLenght = 16

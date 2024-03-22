@@ -2,9 +2,8 @@
 #include <WiFi.h>
 #include "config.h"
 #include "TASK_read_temp.h"
-#include "TASK_data_to_HMI.h"
+#include "TASK_HMI_Serial.h"
 #include "TASK_modbus_control.h"
-// #include "TASK_CMD_from_HMI.h"
 
 String local_IP;
 
@@ -15,7 +14,7 @@ void setup()
 {
 
     xThermoDataMutex = xSemaphoreCreateMutex();
-    xSerialReadBufferMutex = xSemaphoreCreateMutex();
+    // xSerialReadBufferMutex = xSemaphoreCreateMutex();
 
     pinMode(SYSTEM_RLY, OUTPUT);
     pinMode(FAN_RLY, OUTPUT);
@@ -29,15 +28,43 @@ void setup()
 
     Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
 
-    // #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    //     Serial.printf("\nSerial Started");
-    // #endif
+    #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+        Serial.printf("\nSerial Started");
+    #endif
 
     // INIT SENSOR
     thermo_INLET.begin(MAX31865_2WIRE); // set to 2WIRE or 4WIRE as necessary
     thermo_BT.begin(MAX31865_2WIRE);    // set to 2WIRE or 4WIRE as necessary
 #if defined(MODEL_M6S)
     thermo_ET.begin(MAX31865_2WIRE); // set to 2WIRE or 4WIRE as necessary
+#endif
+
+    // 初始化网络服务
+    WiFi.macAddress(macAddr);
+    // Serial_debug.println("WiFi.mode(AP):");
+    WiFi.mode(WIFI_AP);
+    sprintf(ap_name, "HB-%02X%02X%02X", macAddr[3], macAddr[4], macAddr[5]);
+    if (WiFi.softAP(ap_name, "12345678"))
+    { // defualt IP address :192.168.4.1 password min 8 digis
+#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+        Serial.printf("\nWiFi AP: %s Started\n", ap_name);
+#endif
+    }
+    else
+    {
+#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+        Serial.printf("\nWiFi AP NOT OK YET...\n");
+#endif
+        vTaskDelay(500);
+    }
+
+    // Init pwm output
+    pwm_heat.pause();
+    pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution);
+    pwm_heat.resume();
+#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+    pwm_heat.printDebug();
+    Serial.println("\nPWM started");
 #endif
 
     /*---------- Task Definition ---------------------*/
@@ -62,7 +89,7 @@ void setup()
         ,
         NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
         ,
-        NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+        &xTASK_data_to_HMI, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nTASK=2:data_to_HMI OK");
@@ -81,8 +108,6 @@ void setup()
     Serial.printf("\nTASK=3:modbus_control OK");
 #endif
 
-
-
     xTaskCreatePinnedToCore(
         TASK_CMD_HMI, "CMD_HMI" //
         ,
@@ -90,39 +115,10 @@ void setup()
         ,
         NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
         ,
-        NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+        &xTASK_CMD_HMI, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nTASK=4:CMD_HMI OK");
-#endif
-
-
-    // 初始化网络服务
-    WiFi.macAddress(macAddr);
-    // Serial_debug.println("WiFi.mode(AP):");
-    WiFi.mode(WIFI_AP);
-    sprintf(ap_name, "HB-%02X%02X%02X", macAddr[3], macAddr[4], macAddr[5]);
-    if (WiFi.softAP(ap_name, "12345678"))
-    { // defualt IP address :192.168.4.1 password min 8 digis
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-        Serial.printf("\nWiFi AP: %s Started", ap_name);
-#endif
-    }
-    else
-    {
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-        Serial.printf("\nWiFi AP NOT OK YET...");
-#endif
-        vTaskDelay(500);
-    }
-
-    // Init pwm output
-    pwm_heat.pause();
-    pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution);
-    pwm_heat.resume();
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    pwm_heat.printDebug();
-    Serial.println("PWM started");
 #endif
 
     // INIT MODBUS
@@ -140,6 +136,7 @@ void setup()
 
     mb.addHreg(HEAT_HREG);
     mb.addHreg(FAN_HREG);
+    mb.addHreg(PWR_HREG);
 
     // mb.addHreg(SV_HREG);
     // mb.addHreg(PID_HREG);
@@ -154,6 +151,7 @@ void setup()
 
     mb.Hreg(HEAT_HREG, 0); // 初始化赋值
     mb.Hreg(FAN_HREG, 0);  // 初始化赋值
+    mb.Hreg(PWR_HREG, 0);  // 初始化赋值
 
     // mb.Hreg(SV_HREG, 0);      // 初始化赋值
     // mb.Hreg(PID_HREG, 0);     // 初始化赋值
@@ -165,7 +163,6 @@ void setup()
 
     digitalWrite(SYSTEM_RLY, HIGH); // 启动机器
 
-    vTaskDelete(NULL);
 }
 
 void loop()
