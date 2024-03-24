@@ -5,6 +5,7 @@
 #include "config.h"
 #include <Wire.h>
 #include "max6675.h"
+
 #include <Adafruit_MAX31865.h>
 #include <WiFi.h>
 
@@ -15,9 +16,6 @@ double BT_TEMP;
 double ET_TEMP;
 double INLET_TEMP;
 double EX_TEMP;
-
-
-
 
 MAX6675 thermo_EX(SPI_SCK, SPI_CS_EX, SPI_MISO); // CH2  thermoEX
 
@@ -43,20 +41,23 @@ void Task_Thermo_get_data(void *pvParameters)
     TickType_t xLastWakeTime;
     BaseType_t xResult;
     uint8_t TEMP_DATA_Buffer[BUFFER_SIZE];
-    const TickType_t xIntervel = 1500/ portTICK_PERIOD_MS;
+    const TickType_t xIntervel = 1500 / portTICK_PERIOD_MS;
     /* Task Setup and Initialize */
     // Initial the xLastWakeTime variable with the current time.
     xLastWakeTime = xTaskGetTickCount();
+    // setup for the the SPI library:
+
     while (1)
     { // for loop
         // Wait for the next cycle (intervel 2000ms).
         vTaskDelayUntil(&xLastWakeTime, xIntervel);
+
         if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
         {
             vTaskDelay(60);
-            INLET_TEMP = thermo_INLET.temperature(RNOMINAL, RREF); // CH1
-            vTaskDelay(60);
             EX_TEMP = thermo_EX.readCelsius(); // CH2
+            vTaskDelay(60);
+            INLET_TEMP = thermo_INLET.temperature(RNOMINAL, RREF); // CH1
             vTaskDelay(60);
             BT_TEMP = thermo_BT.temperature(RNOMINAL, RREF); // CH3
 
@@ -69,10 +70,10 @@ void Task_Thermo_get_data(void *pvParameters)
         }
 
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-        // Serial.printf("CH3 bt:%d\n", int(round(BT_TEMP * 10)));
-        // Serial.printf("CH1 inlet:%d\n", int(round(INLET_TEMP * 10)));
-        // Serial.printf("CH2 ex:%d\n", int(round(BT_TEMP * 10)));
-        // Serial.println();
+        Serial.printf("CH3 bt:%d\n", int(round(BT_TEMP * 10)));
+        Serial.printf("CH1 inlet:%d\n", int(round(INLET_TEMP * 10)));
+        Serial.printf("CH2 ex:%d\n", int(round(BT_TEMP * 10)));
+        Serial.println();
 #endif
         // update  Hreg data
         mb.Hreg(BT_HREG, int(round(BT_TEMP * 10)));       // 初始化赋值
@@ -92,7 +93,7 @@ void Task_Thermo_get_data(void *pvParameters)
         make_frame_data(TEMP_DATA_Buffer, 1, int(round(EX_TEMP * 10)), 7);
         xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 3);
         // send notify to TASK_data_to_HMI
-        xTaskNotify(xTASK_data_to_HMI,0,eIncrement);
+        xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
     }
 
 } // function
