@@ -3,15 +3,26 @@
 
 #include <Arduino.h>
 #include <config.h>
+#include <pwmWrite.h>
 
-// const uint16_t PWR_HREG = 3005;
+HardwareSerial Serial_HMI(2);      // D16 RX_drumer  D17 TX_drumer
+const int HEAT_OUT_PIN = PWM_HEAT; // GPIO26
+const uint32_t frequency = PWM_FREQ;
+const byte resolution = PWM_RESOLUTION; // pwm -0-4096
+
+Pwm pwm_heat = Pwm();
+
+uint16_t last_PWR;
+
+const uint16_t PWR_HREG = 3005;
+const uint16_t FAN_HREG = 3011;
+const uint16_t HEAT_HREG = 3012;
+
 // const uint16_t SV_HREG = 3006;
 // const uint16_t PID_HREG = 3007;
 // const uint16_t PID_P_HREG = 3008;
 // const uint16_t PID_I_HREG = 3009;
 // const uint16_t PID_D_HREG = 3010;
-
-uint16_t last_PWR;
 
 // uint16_t last_SV;
 //  uint16_t last_PID_P;
@@ -28,7 +39,7 @@ void Task_modbus_control(void *pvParameters)
     (void)pvParameters;
     TickType_t xLastWakeTime;
     uint8_t CMD_DATA_Buffer[BUFFER_SIZE];
-    const TickType_t xIntervel = 500 / portTICK_PERIOD_MS;
+    const TickType_t xIntervel = 200 / portTICK_PERIOD_MS;
     /* Task Setup and Initialize */
     // Initial the xLastWakeTime variable with the current time.
     xLastWakeTime = xTaskGetTickCount();
@@ -45,13 +56,13 @@ void Task_modbus_control(void *pvParameters)
                 last_PWR = mb.Hreg(PWR_HREG);
                 heat_pwr_to_SSR = 0;
                 // 合成HMI数据帧
-                make_frame_head(CMD_DATA_Buffer, 2); // 帧头
-                make_frame_data(CMD_DATA_Buffer, 2, last_PWR, 3);
-                make_frame_end(CMD_DATA_Buffer, 2); // 帧微
-                xQueueSendToFront(queue_data_to_HMI, &CMD_DATA_Buffer, xIntervel);
+                // make_frame_head(CMD_DATA_Buffer, 2); // 帧头
+                // make_frame_data(CMD_DATA_Buffer, 2, last_PWR, 3);
+                // make_frame_end(CMD_DATA_Buffer, 2); // 帧微
+                // xQueueSendToFront(queue_data_to_HMI, &CMD_DATA_Buffer, xIntervel);
                 pwm_heat.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
                 xSemaphoreGive(xThermoDataMutex);                                                            // end of lock mutex
-                xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
+                // xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
             }
 
             init_status = false;
@@ -63,15 +74,15 @@ void Task_modbus_control(void *pvParameters)
                 if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
                 {
                     last_PWR = mb.Hreg(PWR_HREG); // last 火力pwr数据更新
-                    // heat_pwr_to_SSR = last_PWR;   // 发送新火力pwr数据到 SSR
+                    heat_pwr_to_SSR = last_PWR;   // 发送新火力pwr数据到 SSR
                     //  合成HMI数据帧
-                    make_frame_head(CMD_DATA_Buffer, 2); // 帧头
-                    make_frame_data(CMD_DATA_Buffer, 2, last_PWR, 3);
-                    make_frame_end(CMD_DATA_Buffer, 2);
-                    xQueueSendToFront(queue_data_to_HMI, &CMD_DATA_Buffer, xIntervel);                    // 帧微
-                    pwm_heat.write(HEAT_OUT_PIN, map(last_PWR, 0, 100, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
+                    // make_frame_head(CMD_DATA_Buffer, 2); // 帧头
+                    // make_frame_data(CMD_DATA_Buffer, 2, last_PWR, 3);
+                    // make_frame_end(CMD_DATA_Buffer, 2);
+                    // xQueueSendToFront(queue_data_to_HMI, &CMD_DATA_Buffer, xIntervel);                    // 帧微
+                    pwm_heat.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
                     xSemaphoreGive(xThermoDataMutex);
-                    xTaskNotify(xTASK_data_to_HMI, 0, eIncrement); // end of lock mutex
+                    // xTaskNotify(xTASK_data_to_HMI, 0, eIncrement); // end of lock mutex
                 }
             }
         }
@@ -81,13 +92,13 @@ void Task_modbus_control(void *pvParameters)
 
             if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 整合数据帧到HMI
             {
-                make_frame_head(CMD_DATA_Buffer, 2);                            // 帧头
-                make_frame_data(CMD_DATA_Buffer, 2, !digitalRead(HEAT_RLY), 5); // 冷却扇状态数据//pin status has changed ,so read directly
-                make_frame_end(CMD_DATA_Buffer, 2);                             // 帧尾
-                digitalWrite(HEAT_RLY, !digitalRead(HEAT_RLY));                 // 将artisan的控制值控制开关
-                xQueueSendToFront(queue_data_to_HMI, &CMD_DATA_Buffer, xIntervel);
+                digitalWrite(HEAT_RLY, mb.Hreg(HEAT_HREG)); // 将artisan的控制值控制开关
+                // make_frame_head(CMD_DATA_Buffer, 2);                            // 帧头
+                // make_frame_data(CMD_DATA_Buffer, 2, digitalRead(HEAT_RLY), 5); // 冷却扇状态数据//pin status has changed ,so read directly
+                // make_frame_end(CMD_DATA_Buffer, 2);                             // 帧尾
+                // xQueueSendToFront(queue_data_to_HMI, &CMD_DATA_Buffer, xIntervel);
                 xSemaphoreGive(xThermoDataMutex); // end of lock mutex
-                xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
+                // xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
             }
         }
         // FAN
@@ -96,13 +107,13 @@ void Task_modbus_control(void *pvParameters)
 
             if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 整合数据帧到HMI
             {
-                make_frame_head(CMD_DATA_Buffer, 2);                           // 帧头
-                make_frame_data(CMD_DATA_Buffer, 2, !digitalRead(FAN_RLY), 7); // 冷却扇状态数据//pin status has changed ,so read directly
-                make_frame_end(CMD_DATA_Buffer, 2);                            // 帧尾
-                digitalWrite(FAN_RLY, !digitalRead(FAN_RLY));                  // 将artisan的控制值控制开关
-                xQueueSendToFront(queue_data_to_HMI, &CMD_DATA_Buffer, xIntervel);
+                digitalWrite(FAN_RLY, mb.Hreg(FAN_HREG)); // 将artisan的控制值控制开关
+                // make_frame_head(CMD_DATA_Buffer, 2);                           // 帧头
+                // make_frame_data(CMD_DATA_Buffer, 2, digitalRead(FAN_RLY), 7); // 冷却扇状态数据//pin status has changed ,so read directly
+                // make_frame_end(CMD_DATA_Buffer, 2);                            // 帧尾
+                // xQueueSendToFront(queue_data_to_HMI, &CMD_DATA_Buffer, xIntervel);
                 xSemaphoreGive(xThermoDataMutex); // end of lock mutex
-                xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
+                // xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
             }
         }
     }

@@ -42,7 +42,7 @@
 #define HMI_TX 13
 #define HMI_RX 14
 
-const int BUFFER_SIZE = 16;
+const int BUFFER_SIZE = 32;
 
 // parametsrs of MAX31865
 #define RREF 430.0
