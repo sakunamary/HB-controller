@@ -2,7 +2,7 @@
 #define __TASK_HMI_SERIAL_H__
 #include <Arduino.h>
 #include "config.h"
-
+#include <pwmWrite.h>
 
 
 
