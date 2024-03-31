@@ -174,7 +174,7 @@ void setup()
 
     ////////////////////////////////////////////////////////////////
 
-    digitalWrite(SYSTEM_RLY, HIGH); // 启动机器
+    //digitalWrite(SYSTEM_RLY, HIGH); // 启动机器
 }
 
 void loop()

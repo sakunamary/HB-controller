@@ -3,13 +3,6 @@
 
 #include <Arduino.h>
 #include <config.h>
-// #include <pwmWrite.h>
-//  PWM Pins
-//  const int HEAT_OUT_PIN = PWM_HEAT; // GPIO26
-//  const uint32_t frequency = PWM_FREQ;
-//  const byte resolution = PWM_RESOLUTION; // pwm -0-4096
-
-// Pwm pwm_heat = Pwm();
 
 // const uint16_t PWR_HREG = 3005;
 // const uint16_t SV_HREG = 3006;
@@ -28,7 +21,6 @@ uint16_t last_PWR;
 int heat_pwr_to_SSR = 0;
 
 bool init_status = true;
-// bool pid_on_status = false;
 
 void Task_modbus_control(void *pvParameters)
 { // function

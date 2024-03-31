@@ -2,8 +2,8 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#define VERSION "1.0.0"
-#define DEBUG_MODE
+#define VERSION "1.0.2"
+//#define DEBUG_MODE
 // uncomment to make work for HB M6SE ,default is work for HB M2SE
 // #define MODEL_M6S
 // uncomment to switch to MODBUS RTU   ,default is work in MODBUS TCP MODE
@@ -21,26 +21,26 @@
 #define BAUDRATE 115200        // serial port baudrate
 #define BAUD_HMI 9600
 // pinout define
-// #define ENC_BUTTON 34
-// #define ENC_CLK 32
-// #define ENC_DT 35
+#define ENC_BUTTON 7
+#define ENC_CLK 15
+#define ENC_DT 16
 
-#define SPI_MISO 19
-#define SPI_SCK 18
-#define SPI_MOSI 23
+#define SPI_MISO 36
+#define SPI_SCK 37
+#define SPI_MOSI 38
 
-#define SPI_CS_INLET 27 // ch1 OK
-#define SPI_CS_EX 14    // ch2 OK
-#define SPI_CS_BT 26    // ch3 OK
-#define SPI_CS_ET 25    // ch4 OK
+#define SPI_CS_INLET 42 // ch1 OK
+#define SPI_CS_EX 41    // ch2 OK
+#define SPI_CS_BT 40    // ch3 OK
+#define SPI_CS_ET 39    // ch4 OK
 
-#define SYSTEM_RLY 22
-#define FAN_RLY 21
-#define HEAT_RLY 12
-#define PWM_HEAT 33
+#define SYSTEM_RLY 48
+#define FAN_RLY 45
+#define HEAT_RLY 47
+#define PWM_HEAT 8
 
-#define HMI_TX 17
-#define HMI_RX 16
+#define HMI_TX 13
+#define HMI_RX 14
 
 const int BUFFER_SIZE = 16;
 
