@@ -2,8 +2,9 @@
 #include <WiFi.h>
 #include "config.h"
 #include "TASK_read_temp.h"
-#include "TASK_HMI_Serial.h"
 #include "TASK_modbus_control.h"
+
+// #include "TASK_HMI_Serial.h"
 
 String local_IP;
 
@@ -26,7 +27,7 @@ void setup()
 
     Serial.begin(BAUDRATE); // for MODBUS TCP debug
 
-    Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
+    // Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
 
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nSerial Started");
@@ -83,19 +84,6 @@ void setup()
 #endif
 
     xTaskCreatePinnedToCore(
-        TASK_data_to_HMI, "data_to_HMI" //
-        ,
-        1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
-        ,
-        NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-        ,
-        &xTASK_data_to_HMI, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    );
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    Serial.printf("\nTASK=2:data_to_HMI OK");
-#endif
-
-    xTaskCreatePinnedToCore(
         Task_modbus_control, "modbus_control" //
         ,
         1024 * 10 // This stack size can be checked & adjusted by reading the Stack Highwater
@@ -105,34 +93,47 @@ void setup()
         NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    Serial.printf("\nTASK=3:modbus_control OK");
+    Serial.printf("\nTASK=2:modbus_control OK");
 #endif
 
-    xTaskCreatePinnedToCore(
-        TASK_CMD_FROM_HMI, "TCMD_FROM_HMI" //
-        ,
-        1024 * 2 // This stack size can be checked & adjusted by reading the Stack Highwater
-        ,
-        NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-        ,
-        &xTASK_CMD_HMI, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    );
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    Serial.printf("\nTASK=4:CMD_FROM_HMI OK");
-#endif
+    //     xTaskCreatePinnedToCore(
+    //         TASK_data_to_HMI, "data_to_HMI" //
+    //         ,
+    //         1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
+    //         ,
+    //         NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    //         ,
+    //         &xTASK_data_to_HMI, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+    //     );
+    // #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+    //     Serial.printf("\nTASK=3:data_to_HMI OK");
+    // #endif
 
-    xTaskCreatePinnedToCore(
-        TASK_HMI_CMD_handle, "handle_CMD_FROM_HMI" //
-        ,
-        1024 * 8 // This stack size can be checked & adjusted by reading the Stack Highwater
-        ,
-        NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-        ,
-        &xTASK_HMI_CMD_handle, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    );
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    Serial.printf("\nTASK=5:handle_CMD_FROM_HMI OK");
-#endif
+    //     xTaskCreatePinnedToCore(
+    //         TASK_CMD_FROM_HMI, "TCMD_FROM_HMI" //
+    //         ,
+    //         1024 * 2 // This stack size can be checked & adjusted by reading the Stack Highwater
+    //         ,
+    //         NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    //         ,
+    //         &xTASK_CMD_HMI, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+    //     );
+    // #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+    //     Serial.printf("\nTASK=4:CMD_FROM_HMI OK");
+    // #endif
+
+    //     xTaskCreatePinnedToCore(
+    //         TASK_HMI_CMD_handle, "handle_CMD_FROM_HMI" //
+    //         ,
+    //         1024 * 8 // This stack size can be checked & adjusted by reading the Stack Highwater
+    //         ,
+    //         NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    //         ,
+    //         &xTASK_HMI_CMD_handle, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+    //     );
+    // #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+    //     Serial.printf("\nTASK=5:handle_CMD_FROM_HMI OK");
+    // #endif
 
     // INIT MODBUS
 
@@ -156,6 +157,7 @@ void setup()
     // mb.addHreg(PID_P_HREG);
     // mb.addHreg(PID_I_HREG);
     // mb.addHreg(PID_D_HREG);
+
     // INIT MODBUS HREG VALUE
     mb.Hreg(BT_HREG, 0);      // 初始化赋值
     mb.Hreg(ET_HREG, 0);      // 初始化赋值
@@ -173,7 +175,7 @@ void setup()
     // mb.Hreg(PID_D_HREG, 10);  // 初始化赋值 X100
 
     ////////////////////////////////////////////////////////////////
-
+    vTaskDelay(3000);
     digitalWrite(SYSTEM_RLY, HIGH); // 启动机器
 }
 

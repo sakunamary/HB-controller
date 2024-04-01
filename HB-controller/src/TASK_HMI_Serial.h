@@ -4,18 +4,7 @@
 #include "config.h"
 #include <pwmWrite.h>
 
-HardwareSerial Serial_HMI(2); // D16 RX_drumer  D17 TX_drumer
-const int HEAT_OUT_PIN = PWM_HEAT; // GPIO26
-const uint32_t frequency = PWM_FREQ;
-const byte resolution = PWM_RESOLUTION; // pwm -0-4096
 
-Pwm pwm_heat = Pwm();
-
-
-extern uint16_t last_PWR;
-const uint16_t PWR_HREG = 3005;
-const uint16_t FAN_HREG = 3011;
-const uint16_t HEAT_HREG = 3012;
 
 // 发送指令到HMI
 void TASK_data_to_HMI(void *pvParameters)
