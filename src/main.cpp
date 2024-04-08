@@ -35,6 +35,12 @@ void setup()
     digitalWrite(FAN_RLY, LOW);    // 初始化电路启动；
     digitalWrite(HEAT_RLY, LOW);   // 初始化电路启动；
 
+
+    // read pid data from EEPROM
+    EEPROM.begin(sizeof(pid_parm));
+    EEPROM.get(0, pid_parm);
+
+
     Serial.begin(BAUDRATE); // for MODBUS TCP debug
 
     // Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
@@ -100,10 +106,23 @@ void setup()
         ,
         NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
         ,
-        NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+        &xTask_modbus_control, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nTASK=2:modbus_control OK");
+#endif
+
+    xTaskCreatePinnedToCore(
+        Task_PID_autotune, "PID autotune" //
+        ,
+        1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
+        ,
+        NULL, 4 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+        ,
+        &xTask_PID_autotune, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+    );
+#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+    Serial.printf("\nTASK=3:PID autotune OK");
 #endif
 
     //     xTaskCreatePinnedToCore(
