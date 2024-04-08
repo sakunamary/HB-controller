@@ -3,16 +3,16 @@
 #define __CONFIG_H__
 
 #define VERSION "1.0.3"
-//#define DEBUG_MODE
-// uncomment to make work for HB M6SE ,default is work for HB M2SE
-// #define MODEL_M6S
-// uncomment to switch to MODBUS RTU   ,default is work in MODBUS TCP MODE
-// #define MODBUS_RTU
+// #define DEBUG_MODE
+//  uncomment to make work for HB M6SE ,default is work for HB M2SE
+//  #define MODEL_M6S
+//  uncomment to switch to MODBUS RTU   ,default is work in MODBUS TCP MODE
+//  #define MODBUS_RTU
 #define SLAVE_ID 1 // MODBUS RTU SLAVE ID
 
 // pwm setting
-#define PWM_FREQ 10000
-#define PWM_RESOLUTION 10 // 0-1024
+#define PWM_FREQ = 5000
+#define PWM_RESOLUTION 12 // 0-1024
 
 ///////////////////////////////////////
 //   DO NOT make any change below    //
@@ -45,7 +45,6 @@
 #define PID_MIN_OUT 20
 #define PID_MAX_OUT 80
 
-
 const int BUFFER_SIZE = 16;
 
 // parametsrs of MAX31865
@@ -62,13 +61,7 @@ typedef struct eeprom_settings
     double ET_tempfix;
 } pid_setting_t;
 
-
-
-
-
-
 // publc funciton
-
 
 uint8_t make_frame_head(uint8_t data_array[BUFFER_SIZE], int cmd_type)
 // pagkage the data frame end .cmd_type:1/data_frame;2/run_status;3/HMI_cmd
@@ -168,6 +161,7 @@ static TaskHandle_t xTASK_data_to_HMI = NULL;
 static TaskHandle_t xTASK_CMD_HMI = NULL;
 static TaskHandle_t xTASK_HMI_CMD_handle = NULL;
 static TaskHandle_t xTask_PID_autotune = NULL;
+static TaskHandle_t xTask_modbus_control = NULL;
 
 SemaphoreHandle_t xThermoDataMutex = NULL;
 SemaphoreHandle_t xSerialReadBufferMutex = NULL;

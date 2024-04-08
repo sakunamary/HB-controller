@@ -165,10 +165,6 @@ void Task_modbus_control(void *pvParameters)
         // PID auto tune triggered
         if (mb.Hreg(PID_STATUS_HREG) != 0)
         {
-
-            vTaskSuspend(xTask_modbus_control);
-            vTaskSuspend(xTASK_HMI_CMD_handle);
-            vTaskSuspend(xTASK_CMD_HMI);
             xTaskNotify(xTask_PID_autotune, 0, eIncrement); // 通知处理任务干活
         }
     }
@@ -190,9 +186,14 @@ void Task_PID_autotune(void *pvParameters)
 
         if (xResult == pdTRUE)
         {
+            vTaskSuspend(xTask_modbus_control);
+            vTaskSuspend(xTASK_HMI_CMD_handle);
+            vTaskSuspend(xTASK_CMD_HMI);
             mb.Hreg(PID_STATUS_HREG, 0); // 关闭 pid
-            vTaskDelay(1000);            // 让pid关闭有足够时间执行
-            while (!tuner.isFinished())  // 开始自动整定
+            Serial.printf("\nPID Auto Tune will be started in 5 seconde...\n");
+            vTaskDelay(5000); // 让pid关闭有足够时间执行
+
+            while (!tuner.isFinished()) // 开始自动整定
             {
                 prevMicroseconds = microseconds;
                 microseconds = micros();
@@ -212,8 +213,15 @@ void Task_PID_autotune(void *pvParameters)
             pid_parm.p = tuner.getKp();
             pid_parm.i = tuner.getKi();
             pid_parm.d = tuner.getKd();
+
+            Serial.printf("\nPID Auto Tune Finished ...\n");
+            Serial.printf("\nPID kp:%4.2f\n", pid_parm.p);
+            Serial.printf("\nPID ki:%4.2f\n", pid_parm.i);
+            Serial.printf("\nPID kd:%4.2f\n", pid_parm.d);
+
             EEPROM.put(0, pid_parm);
             EEPROM.commit();
+            Serial.printf("\nPID parms saved ...\n");
             vTaskResume(xTask_modbus_control);
             vTaskResume(xTASK_HMI_CMD_handle);
             vTaskResume(xTASK_CMD_HMI);
