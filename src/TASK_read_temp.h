@@ -43,7 +43,7 @@ void Task_Thermo_get_data(void *pvParameters)
     TickType_t xLastWakeTime;
     BaseType_t xResult;
     uint8_t TEMP_DATA_Buffer[BUFFER_SIZE];
-    const TickType_t xIntervel = pid_parm.pid_CT / portTICK_PERIOD_MS;
+    const TickType_t xIntervel = 2000 / portTICK_PERIOD_MS;
     /* Task Setup and Initialize */
     // Initial the xLastWakeTime variable with the current time.
     xLastWakeTime = xTaskGetTickCount();
