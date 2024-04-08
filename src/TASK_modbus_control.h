@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <config.h>
+#include "ArduPID.h"
 #include <pwmWrite.h>
 
 HardwareSerial Serial_HMI(2);      // D16 RX_drumer  D17 TX_drumer
@@ -13,25 +14,19 @@ const byte resolution = PWM_RESOLUTION; // pwm -0-4096
 Pwm pwm_heat = Pwm();
 
 uint16_t last_PWR;
-
-const uint16_t PWR_HREG = 3005;
-const uint16_t FAN_HREG = 3011;
-const uint16_t HEAT_HREG = 3012;
-
-// const uint16_t SV_HREG = 3006;
-// const uint16_t PID_HREG = 3007;
-// const uint16_t PID_P_HREG = 3008;
-// const uint16_t PID_I_HREG = 3009;
-// const uint16_t PID_D_HREG = 3010;
-
-// uint16_t last_SV;
-//  uint16_t last_PID_P;
-//  uint16_t last_PID_I;
-//  uint16_t last_PID_D;
+const uint16_t PWR_HREG = 3005; // HEAT PWR 
+const uint16_t FAN_HREG = 3006; // COOLING FAN SWITCH
+const uint16_t HEAT_HREG = 3007; // HEAT SWTICH
+const uint16_t PID_SV_HREG = 3008;  //PID SV
+const uint16_t PID_STATUS_HREG = 3009; // PID RUNNING STATUS 
 
 int heat_pwr_to_SSR = 0;
-
 bool init_status = true;
+bool pid_status = false;
+
+double PID_output;
+double pid_sv = 0;
+double pid_tune_output;
 
 void Task_modbus_control(void *pvParameters)
 { // function
@@ -48,13 +43,15 @@ void Task_modbus_control(void *pvParameters)
     {         // for loop
         vTaskDelayUntil(&xLastWakeTime, xIntervel);
         // HEAT_HREG
-        if (init_status)
+        if (init_status) //初始化状态
         {
             //
             if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) //
             {
                 last_PWR = mb.Hreg(PWR_HREG);
-                heat_pwr_to_SSR = 0;
+                heat_pwr_to_SSR = last_PWR;
+                pid_sv = 0;
+                mb.Hreg(PID_SV_HREG,0);
                 // 合成HMI数据帧
                 // make_frame_head(CMD_DATA_Buffer, 2); // 帧头
                 // make_frame_data(CMD_DATA_Buffer, 2, last_PWR, 3);
@@ -86,6 +83,8 @@ void Task_modbus_control(void *pvParameters)
                 }
             }
         }
+
+        /////////////////////////////////////////////////////////////////////////////
         // HEAT
         if (mb.Hreg(HEAT_HREG) != digitalRead(HEAT_RLY)) // 风扇开关状态发生变动
         {

@@ -2,7 +2,7 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#define VERSION "1.0.2"
+#define VERSION "1.0.3"
 //#define DEBUG_MODE
 // uncomment to make work for HB M6SE ,default is work for HB M2SE
 // #define MODEL_M6S
@@ -42,13 +42,33 @@
 #define HMI_TX 13
 #define HMI_RX 14
 
+#define PID_MIN_OUT 20
+#define PID_MAX_OUT 80
+
+
 const int BUFFER_SIZE = 16;
 
 // parametsrs of MAX31865
 #define RREF 430.0
 #define RNOMINAL 100.0
+//
+typedef struct eeprom_settings
+{
+    uint16_t pid_CT;
+    double p;
+    double i;
+    double d;
+    double BT_tempfix;
+    double ET_tempfix;
+} pid_setting_t;
+
+
+
+
+
 
 // publc funciton
+
 
 uint8_t make_frame_head(uint8_t data_array[BUFFER_SIZE], int cmd_type)
 // pagkage the data frame end .cmd_type:1/data_frame;2/run_status;3/HMI_cmd

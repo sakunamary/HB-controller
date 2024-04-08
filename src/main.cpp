@@ -10,6 +10,16 @@ String local_IP;
 
 char ap_name[30];
 uint8_t macAddr[6];
+extern double BT_TEMP;
+
+pid_setting_t pid_parm = {
+    2000, // uint16_t pid_CT;
+    2.0,  // double p ;
+    0.12, // double i ;
+    5.0,  // double d ;
+    0.0,  // uint16_t BT_tempfix;
+    0.0   // uint16_t ET_tempfix;
+};
 
 void setup()
 {
@@ -152,11 +162,8 @@ void setup()
     mb.addHreg(FAN_HREG);
     mb.addHreg(PWR_HREG);
 
-    // mb.addHreg(SV_HREG);
-    // mb.addHreg(PID_HREG);
-    // mb.addHreg(PID_P_HREG);
-    // mb.addHreg(PID_I_HREG);
-    // mb.addHreg(PID_D_HREG);
+    mb.addHreg(PID_SV_HREG);
+    mb.addHreg(PID_STATUS_HREG);
 
     // INIT MODBUS HREG VALUE
     mb.Hreg(BT_HREG, 0);      // 初始化赋值
@@ -168,11 +175,23 @@ void setup()
     mb.Hreg(FAN_HREG, 0);  // 初始化赋值
     mb.Hreg(PWR_HREG, 0);  // 初始化赋值
 
-    // mb.Hreg(SV_HREG, 0);      // 初始化赋值
-    // mb.Hreg(PID_HREG, 0);     // 初始化赋值
-    // mb.Hreg(PID_P_HREG, 500); // 初始化赋值 X100
-    // mb.Hreg(PID_I_HREG, 0);   // 初始化赋值 X100
-    // mb.Hreg(PID_D_HREG, 10);  // 初始化赋值 X100
+    mb.Hreg(PID_SV_HREG, 0);     // 初始化赋值
+    mb.Hreg(PID_STATUS_HREG, 0); // 初始化赋值
+
+    // init PID
+    Heat_pid_controller.begin(&BT_TEMP, &PID_output, &pid_sv, pid_parm.p, pid_parm.i, pid_parm.d);
+    Heat_pid_controller.setSampleTime(pid_parm.pid_CT); // OPTIONAL - will ensure at least 10ms have past between successful compute() calls
+    Heat_pid_controller.setOutputLimits(round(PID_MIN_OUT * 255 / 100), round(PID_MAX_OUT * 255 / 100));
+    Heat_pid_controller.setBias(255.0 / 2.0);
+    Heat_pid_controller.setWindUpLimits(-3, 3); // Groth bounds for the integral term to prevent integral wind-up
+    Heat_pid_controller.start();
+
+    // INIT PID AUTOTUNE
+
+    tuner.setTargetInputValue(180.0);
+    tuner.setLoopInterval(pid_parm.pid_CT);
+    tuner.setOutputRange(round(PID_MIN_OUT * 255 / 100), round(PID_MAX_OUT * 255 / 100));
+    tuner.setZNMode(PIDAutotuner::ZNModeBasicPID);
 
     ////////////////////////////////////////////////////////////////
     vTaskDelay(3000);

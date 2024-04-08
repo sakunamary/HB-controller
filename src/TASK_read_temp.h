@@ -17,6 +17,8 @@ double ET_TEMP;
 double INLET_TEMP;
 double EX_TEMP;
 
+extern pid_setting_t pid_parm;
+
 MAX6675 thermo_EX(SPI_SCK, SPI_CS_EX, SPI_MISO); // CH2  thermoEX
 
 // Use software SPI: CS, DI, DO, CLK
@@ -41,7 +43,7 @@ void Task_Thermo_get_data(void *pvParameters)
     TickType_t xLastWakeTime;
     BaseType_t xResult;
     uint8_t TEMP_DATA_Buffer[BUFFER_SIZE];
-    const TickType_t xIntervel = 1500 / portTICK_PERIOD_MS;
+    const TickType_t xIntervel = pid_parm.pid_CT / portTICK_PERIOD_MS;
     /* Task Setup and Initialize */
     // Initial the xLastWakeTime variable with the current time.
     xLastWakeTime = xTaskGetTickCount();
@@ -55,11 +57,11 @@ void Task_Thermo_get_data(void *pvParameters)
         if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
         {
             vTaskDelay(60);
-            EX_TEMP = thermo_EX.readCelsius(); // CH2
+            EX_TEMP = thermo_EX.readCelsius()+pid_parm.ET_tempfix; // CH2
             vTaskDelay(60);
             INLET_TEMP = thermo_INLET.temperature(RNOMINAL, RREF); // CH1
             vTaskDelay(60);
-            BT_TEMP = thermo_BT.temperature(RNOMINAL, RREF); // CH3
+            BT_TEMP = thermo_BT.temperature(RNOMINAL, RREF)+pid_parm.BT_tempfix; // CH3
 
 #if defined(MODEL_M6S)
 
