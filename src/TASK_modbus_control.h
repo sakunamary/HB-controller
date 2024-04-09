@@ -24,9 +24,11 @@ int heat_pwr_to_SSR = 0;
 bool init_status = true;
 bool pid_status = false;
 
-double PID_output;
+double PID_output; //取值范围 （0-255）
 double pid_sv = 0;
 double pid_tune_output;
+double pid_out_max = PID_MAX_OUT;//取值范围 （0-255）
+double pid_out_min = PID_MIN_OUT;//取值范围 （0-255）
 
 void Task_modbus_control(void *pvParameters)
 { // function
@@ -237,7 +239,8 @@ void Task_PID_autotune(void *pvParameters)
 // 火力: 00 00 // uint16
 // 火力开关: 00 00 // uint16
 // 冷却开关: 00 00 // uint16
-// NULL: 00 00 // uint16
-// NULL: 00 00 // uint16
+// PID SV : 00 00 // uint16
+// PID_STATUS: 00 // uint8
+// PID_TUNE :00
 // 帧尾:FF FF FF
 // 温度为小端模式   dec 2222  hex AE 08

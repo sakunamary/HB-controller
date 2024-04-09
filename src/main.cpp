@@ -12,6 +12,7 @@ char ap_name[30];
 uint8_t macAddr[6];
 extern double BT_TEMP;
 
+
 pid_setting_t pid_parm = {
     2000, // uint16_t pid_CT;
     2.0,  // double p ;
@@ -200,7 +201,7 @@ void setup()
     // init PID
     Heat_pid_controller.begin(&BT_TEMP, &PID_output, &pid_sv, pid_parm.p, pid_parm.i, pid_parm.d);
     Heat_pid_controller.setSampleTime(pid_parm.pid_CT); // OPTIONAL - will ensure at least 10ms have past between successful compute() calls
-    Heat_pid_controller.setOutputLimits(round(PID_MIN_OUT * 255 / 100), round(PID_MAX_OUT * 255 / 100));
+    Heat_pid_controller.setOutputLimits(0,255); //取值范围（0-255）
     Heat_pid_controller.setBias(255.0 / 2.0);
     Heat_pid_controller.setWindUpLimits(-3, 3); // Groth bounds for the integral term to prevent integral wind-up
     Heat_pid_controller.start();
@@ -209,7 +210,7 @@ void setup()
 
     tuner.setTargetInputValue(180.0);
     tuner.setLoopInterval(pid_parm.pid_CT);
-    tuner.setOutputRange(round(PID_MIN_OUT * 255 / 100), round(PID_MAX_OUT * 255 / 100));
+    tuner.setOutputRange(map(pid_out_min,0,100,0,255), map(pid_out_max,0,100,0,255));//取值范围转换为（0-255）
     tuner.setZNMode(PIDAutotuner::ZNModeBasicPID);
 
     ////////////////////////////////////////////////////////////////
