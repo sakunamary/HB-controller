@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <WiFi.h>
+#include "EEPROM.h"
 #include "config.h"
+
 #include "TASK_read_temp.h"
 #include "TASK_modbus_control.h"
 

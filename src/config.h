@@ -11,7 +11,7 @@
 #define SLAVE_ID 1 // MODBUS RTU SLAVE ID
 
 // pwm setting
-#define PWM_FREQ = 10000
+#define PWM_FREQ 10000
 #define PWM_RESOLUTION 10 // 0-1024
 
 ///////////////////////////////////////

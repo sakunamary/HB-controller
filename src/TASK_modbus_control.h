@@ -5,6 +5,7 @@
 #include <config.h>
 #include "ArduPID.h"
 #include <pwmWrite.h>
+#include <pidautotuner.h>
 
 HardwareSerial Serial_HMI(2);      // D16 RX_drumer  D17 TX_drumer
 const int HEAT_OUT_PIN = PWM_HEAT; // GPIO26
@@ -12,6 +13,8 @@ const uint32_t frequency = PWM_FREQ;
 const byte resolution = PWM_RESOLUTION; // pwm -0-4096
 
 Pwm pwm_heat = Pwm();
+ArduPID Heat_pid_controller;
+PIDAutotuner tuner = PIDAutotuner();
 
 uint16_t last_PWR;
 const uint16_t PWR_HREG = 3005;        // HEAT PWR
@@ -23,12 +26,14 @@ const uint16_t PID_STATUS_HREG = 3009; // PID RUNNING STATUS
 int heat_pwr_to_SSR = 0;
 bool init_status = true;
 bool pid_status = false;
+long prevMicroseconds;
+long microseconds;
 
-double PID_output; //取值范围 （0-255）
+double PID_output; // 取值范围 （0-255）
 double pid_sv = 0;
 double pid_tune_output;
-double pid_out_max = PID_MAX_OUT;//取值范围 （0-255）
-double pid_out_min = PID_MIN_OUT;//取值范围 （0-255）
+double pid_out_max = PID_MAX_OUT; // 取值范围 （0-255）
+double pid_out_min = PID_MIN_OUT; // 取值范围 （0-255）
 
 void Task_modbus_control(void *pvParameters)
 { // function
