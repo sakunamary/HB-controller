@@ -22,6 +22,7 @@ const uint16_t FAN_HREG = 3006;        // COOLING FAN SWITCH
 const uint16_t HEAT_HREG = 3007;       // HEAT SWTICH
 const uint16_t PID_SV_HREG = 3008;     // PID SV
 const uint16_t PID_STATUS_HREG = 3009; // PID RUNNING STATUS
+const uint16_t PID_TUNE = 3010;
 
 int heat_pwr_to_SSR = 0;
 bool init_status = true;
@@ -170,7 +171,7 @@ void Task_modbus_control(void *pvParameters)
             }
         }
         // PID auto tune triggered
-        if (mb.Hreg(PID_STATUS_HREG) != 0)
+        if (mb.Hreg(PID_TUNE) != 0)
         {
             xTaskNotify(xTask_PID_autotune, 0, eIncrement); // 通知处理任务干活
         }
@@ -194,9 +195,14 @@ void Task_PID_autotune(void *pvParameters)
         if (xResult == pdTRUE)
         {
             vTaskSuspend(xTask_modbus_control);
-            vTaskSuspend(xTASK_HMI_CMD_handle);
-            vTaskSuspend(xTASK_CMD_HMI);
+            // vTaskSuspend(xTASK_HMI_CMD_handle);
+            // vTaskSuspend(xTASK_CMD_HMI);
             mb.Hreg(PID_STATUS_HREG, 0); // 关闭 pid
+            mb.Hreg(PID_SV_HREG, 0);
+            mb.Hreg(FAN_HREG, 0);
+            mb.Hreg(HEAT_HREG, 1);
+            mb.Hreg(PWR_HREG, 0);
+            pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution); // 输出新火力pwr到SSRÍ
             Serial.printf("\nPID Auto Tune will be started in 5 seconde...\n");
             vTaskDelay(5000); // 让pid关闭有足够时间执行
 
@@ -230,8 +236,8 @@ void Task_PID_autotune(void *pvParameters)
             EEPROM.commit();
             Serial.printf("\nPID parms saved ...\n");
             vTaskResume(xTask_modbus_control);
-            vTaskResume(xTASK_HMI_CMD_handle);
-            vTaskResume(xTASK_CMD_HMI);
+            // vTaskResume(xTASK_HMI_CMD_handle);
+            // vTaskResume(xTASK_CMD_HMI);
         }
     }
 }

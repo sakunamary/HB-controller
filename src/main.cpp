@@ -186,6 +186,7 @@ void setup()
 
     mb.addHreg(PID_SV_HREG);
     mb.addHreg(PID_STATUS_HREG);
+    mb.addHreg(PID_TUNE);
 
     // INIT MODBUS HREG VALUE
     mb.Hreg(BT_HREG, 0);      // 初始化赋值
@@ -199,6 +200,7 @@ void setup()
 
     mb.Hreg(PID_SV_HREG, 0);     // 初始化赋值
     mb.Hreg(PID_STATUS_HREG, 0); // 初始化赋值
+    mb.Hreg(PID_TUNE,0);
 
     // init PID
     Heat_pid_controller.begin(&BT_TEMP, &PID_output, &pid_sv, pid_parm.p, pid_parm.i, pid_parm.d);
