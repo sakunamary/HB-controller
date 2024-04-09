@@ -114,21 +114,14 @@ void Task_Thermo_get_data(void *pvParameters)
 // HB --> HMI的控制状态帧 FrameLenght = 16
 // 帧头: 69 FF
 // 类型:02控制数据
+// 系统OK : 00
 // 火力: 00 00 // uint16
-// 火力开关: 00 00 // uint16
-// 冷却开关: 00 00 // uint16
-// NULL: 00 00 // uint16
-// NULL: 00 00 // uint16
-// 帧尾:FF FF FF
-
-// HMI --> HB的 命令帧 FrameLenght = 16
-// 帧头: 67 FF
-// 类型:03 控制数据
-// 火力: 00  00 // uint16
-// 火力开关: 00 00// uint16
-// 冷却开关: 00 00// uint16
-// NULL: 00 00 // uint16
-// NULL: 00 00 // uint16
+// PID SV : 00 00 // uint16
+// PID_STATUS: 00 // uint8
+// 火力开关: 00
+// 冷却开关: 00 // uint16
+// PID_TUNE :00
+// NULL: 00
 // 帧尾:FF FF FF
 
 // 温度为小端模式   dec 2222  hex AE 08

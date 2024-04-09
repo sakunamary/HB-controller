@@ -63,49 +63,33 @@ typedef struct eeprom_settings
 
 // publc funciton
 
-uint8_t make_frame_head(uint8_t data_array[BUFFER_SIZE], int cmd_type)
+uint8_t make_frame_package(uint8_t data_array[BUFFER_SIZE], bool cmd_inbond, int cmd_type)
 // pagkage the data frame end .cmd_type:1/data_frame;2/run_status;3/HMI_cmd
 {
-    data_array[0] = 0x69; // frame head
+    if (cmd_inbond == true)
+    {
+        data_array[0] = 0x67; // frame head
+    }
+    else
+    {
+        data_array[0] = 0x69; // frame head
+    }
+
     data_array[1] = 0xff; // frame head
 
     switch (cmd_type)
     {
-    case 1:                   // data_frame
-        data_array[2] = 0x01; // data type
-        break;
-    case 2:                   // run_status
-        data_array[2] = 0x02; // data type
-        break;
-    case 3:                   // HMI_cmd
-        data_array[2] = 0x03; // data type
-        break;
-    default:
-        break;
-    }
-    return data_array[BUFFER_SIZE];
-}
-
-uint8_t make_frame_end(uint8_t data_array[BUFFER_SIZE], int cmd_type)
-// pagkage the data frame end .cmd_type:1/data_frame;2/run_status;3/HMI_cmd
-{
-
-    switch (cmd_type)
-    {
     case 1:                    // data_frame
+        data_array[2] = 0x01;  // data type
+        data_array[11] = 0x00; // frame end
+        data_array[12] = 0x00; // frame end
         data_array[13] = 0xff; // frame end
         data_array[14] = 0xff; // frame end
         data_array[15] = 0xff; // frame end
+
         break;
     case 2:                    // run_status
-        data_array[13] = 0xff; // frame end
-        data_array[14] = 0xff; // frame end
-        data_array[15] = 0xff; // frame end
-        break;
-    case 3:                    // HMI_cmd
-        data_array[9] = 0x00;  // frame end
-        data_array[10] = 0x00; // frame end
-        data_array[11] = 0x00; // frame end
+        data_array[2] = 0x02;  // data type
         data_array[12] = 0x00; // frame end
         data_array[13] = 0xff; // frame end
         data_array[14] = 0xff; // frame end
@@ -117,8 +101,9 @@ uint8_t make_frame_end(uint8_t data_array[BUFFER_SIZE], int cmd_type)
     return data_array[BUFFER_SIZE];
 }
 
+
 uint8_t make_frame_data(uint8_t data_array[BUFFER_SIZE], int cmd_type, uint16_t in_val, int uBit)
-// pagkage the data frame.cmd_type:1/data_frame;2/run_status;3/HMI_cmd
+// pagkage the data frame.cmd_type:1/data_frame;2/run_status;
 {
     uint8_t high = highByte(in_val);
     uint8_t low = lowByte(in_val);
@@ -133,18 +118,11 @@ uint8_t make_frame_data(uint8_t data_array[BUFFER_SIZE], int cmd_type, uint16_t 
 
         break;
     case 2:
-        if (uBit > 2 && uBit < 9)
+        if (uBit > 3 && uBit < 8)
         {
             data_array[uBit] = low; // frame end
         }
         break;
-    case 3:
-        if (uBit > 2 && uBit < 9)
-        {
-            data_array[uBit] = low; // frame end
-        }
-        break;
-
     default:
         break;
     }
@@ -177,22 +155,14 @@ QueueHandle_t queueCMD = xQueueCreate(15, sizeof(uint8_t[BUFFER_SIZE]));        
 // HB --> HMI的控制状态帧 FrameLenght = 16
 // 帧头: 69 FF
 // 类型:02控制数据
+// 系统OK : 00
 // 火力: 00 00 // uint16
-// 火力开关: 00 00 // uint16
-// 冷却开关: 00 00 // uint16
 // PID SV : 00 00 // uint16
 // PID_STATUS: 00 // uint8
+// 火力开关: 00
+// 冷却开关: 00 // uint16
 // PID_TUNE :00
-// 帧尾:FF FF FF
-
-// HMI --> HB的 命令帧 FrameLenght = 16
-// 帧头: 67 FF
-// 类型:03 控制数据
-// 火力: 00  00 // uint16
-// 火力开关: 00 00// uint16
-// 冷却开关: 00 00// uint16
-// NULL: 00 00 // uint16
-// NULL: 00 00 // uint16
+// NULL: 00
 // 帧尾:FF FF FF
 
 // 温度为小端模式   dec 2222  hex AE 08

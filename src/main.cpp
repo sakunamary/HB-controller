@@ -216,6 +216,7 @@ void setup()
     ////////////////////////////////////////////////////////////////
     vTaskDelay(3000);
     digitalWrite(SYSTEM_RLY, HIGH); // 启动机器
+    
 }
 
 void loop()
