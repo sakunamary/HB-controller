@@ -44,8 +44,11 @@ void setup()
     pinMode(SYSTEM_RLY, OUTPUT);
     pinMode(HEAT_RLY, OUTPUT);
 
-    digitalWrite(SYSTEM_RLY, LOW); // 初始化电路启动；
-    digitalWrite(HEAT_RLY, LOW);   // 初始化电路启动；
+    digitalWrite(SYSTEM_RLY, LOW);  // 初始化电路启动；
+    digitalWrite(HEAT_RLY, LOW);    // 初始化电路启动；
+    digitalWrite(SYSTEM_RLY, HIGH); // 启动机器
+
+
     Serial.begin(BAUDRATE);
     thermo_BT.begin(MAX31865_2WIRE); // set to 2WIRE or 4WIRE as necessary
 
@@ -67,7 +70,7 @@ void setup()
         Serial.println("Initialed EEPROM,data will be writen after 3s...");
         delay(3000);
         EEPROM.get(0, pid_parm);
-        pid_parm.pid_CT = 5000;
+        pid_parm.pid_CT = 6000;
         pid_parm.p = 2.0;
         pid_parm.i = 0.12;
         pid_parm.d = 5.0;
