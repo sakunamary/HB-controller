@@ -86,6 +86,7 @@ void Task_modbus_control(void *pvParameters)
                         Heat_pid_controller.compute();                     // 计算pid输出
                         heat_pwr_to_SSR = map(PID_output, 0, 255, 0, 100); // 转换为格式 pid_output (0,255) -> (0,100)
                         last_PWR = heat_pwr_to_SSR;
+                        mb.Hreg(PWR_HREG, heat_pwr_to_SSR);
                         xSemaphoreGive(xThermoDataMutex);
                     }
                 }
@@ -97,6 +98,7 @@ void Task_modbus_control(void *pvParameters)
                         Heat_pid_controller.compute();                     // 计算pid输出
                         heat_pwr_to_SSR = map(PID_output, 0, 255, 0, 100); // 转换为格式 pid_output (0,255) -> (0,100)
                         last_PWR = heat_pwr_to_SSR;
+                        mb.Hreg(PWR_HREG, heat_pwr_to_SSR);
                         xSemaphoreGive(xThermoDataMutex);
                     }
                 }
@@ -170,77 +172,8 @@ void Task_modbus_control(void *pvParameters)
                 // xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
             }
         }
-        // PID auto tune triggered
-        if (mb.Hreg(PID_TUNE) != 0)
-        {
-            xTaskNotify(xTask_PID_autotune, 0, eIncrement); // 通知处理任务干活
-        }
     }
     vTaskDelay(20);
-}
-
-void Task_PID_autotune(void *pvParameters)
-{
-    (void)pvParameters;
-    uint32_t ulNotificationValue; // 用来存放本任务的4个字节的notification value
-    BaseType_t xResult;
-
-    while (1)
-    {
-        xResult = xTaskNotifyWait(0x00,                 // 在运行前这个命令之前，先清除这几位
-                                  0x00,                 // 运行后，重置所有的bits 0x00 or ULONG_MAX or 0xFFFFFFFF
-                                  &ulNotificationValue, // 重置前的notification value
-                                  portMAX_DELAY);       // 一直等待
-
-        if (xResult == pdTRUE)
-        {
-            vTaskSuspend(xTask_modbus_control);
-            // vTaskSuspend(xTASK_HMI_CMD_handle);
-            // vTaskSuspend(xTASK_CMD_HMI);
-            mb.Hreg(PID_STATUS_HREG, 0); // 关闭 pid
-            mb.Hreg(PID_SV_HREG, 0);
-            mb.Hreg(FAN_HREG, 0);
-            mb.Hreg(HEAT_HREG, 1);
-            mb.Hreg(PWR_HREG, 0);
-            pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution); // 输出新火力pwr到SSRÍ
-            Serial.printf("\nPID Auto Tune will be started in 5 seconde...\n");
-            vTaskDelay(5000); // 让pid关闭有足够时间执行
-
-            while (!tuner.isFinished()) // 开始自动整定
-            {
-                prevMicroseconds = microseconds;
-                microseconds = micros();
-                pid_tune_output = tuner.tunePID(BT_TEMP, microseconds);
-
-                pwm_heat.write(HEAT_OUT_PIN, map(pid_tune_output, round(PID_MIN_OUT * 255 / 100), round(PID_MAX_OUT * 255 / 100), 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
-                // This loop must run at the same speed as the PID control loop being tuned
-                while (micros() - microseconds < pid_parm.pid_CT)
-                    delayMicroseconds(1);
-            }
-
-            // Turn the output off here.
-            pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution);
-            mb.Hreg(HEAT_HREG, 0);
-            digitalWrite(HEAT_RLY, mb.Hreg(HEAT_HREG));
-            // Get PID gains - set your PID controller's gains to these
-            pid_parm.p = tuner.getKp();
-            pid_parm.i = tuner.getKi();
-            pid_parm.d = tuner.getKd();
-
-            Serial.printf("\nPID Auto Tune Finished ...\n");
-            Serial.printf("\nPID kp:%4.2f\n", pid_parm.p);
-            Serial.printf("\nPID ki:%4.2f\n", pid_parm.i);
-            Serial.printf("\nPID kd:%4.2f\n", pid_parm.d);
-
-            EEPROM.put(0, pid_parm);
-            EEPROM.commit();
-            Serial.printf("\nPID parms saved ...\n");
-            mb.Hreg(PID_TUNE,0);
-            vTaskResume(xTask_modbus_control);
-            // vTaskResume(xTASK_HMI_CMD_handle);
-            // vTaskResume(xTASK_CMD_HMI);
-        }
-    }
 }
 
 #endif
