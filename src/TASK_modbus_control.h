@@ -86,6 +86,7 @@ void Task_modbus_control(void *pvParameters)
                         Heat_pid_controller.compute();                     // 计算pid输出
                         heat_pwr_to_SSR = map(PID_output, 0, 255, 0, 100); // 转换为格式 pid_output (0,255) -> (0,100)
                         last_PWR = heat_pwr_to_SSR;
+                        mb.Hreg(PWR_HREG, heat_pwr_to_SSR);
                         xSemaphoreGive(xThermoDataMutex);
                     }
                 }
@@ -97,6 +98,7 @@ void Task_modbus_control(void *pvParameters)
                         Heat_pid_controller.compute();                     // 计算pid输出
                         heat_pwr_to_SSR = map(PID_output, 0, 255, 0, 100); // 转换为格式 pid_output (0,255) -> (0,100)
                         last_PWR = heat_pwr_to_SSR;
+                        mb.Hreg(PWR_HREG, heat_pwr_to_SSR);
                         xSemaphoreGive(xThermoDataMutex);
                     }
                 }
@@ -201,18 +203,18 @@ void Task_PID_autotune(void *pvParameters)
             mb.Hreg(PID_SV_HREG, 0);
             mb.Hreg(FAN_HREG, 0);
             mb.Hreg(HEAT_HREG, 1);
-            mb.Hreg(PWR_HREG, 0);
+
             pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution); // 输出新火力pwr到SSRÍ
             Serial.printf("\nPID Auto Tune will be started in 5 seconde...\n");
-            vTaskDelay(5000); // 让pid关闭有足够时间执行
+            vTaskDelay(3000); // 让pid关闭有足够时间执行
 
             while (!tuner.isFinished()) // 开始自动整定
             {
                 prevMicroseconds = microseconds;
                 microseconds = micros();
                 pid_tune_output = tuner.tunePID(BT_TEMP, microseconds);
-
-                pwm_heat.write(HEAT_OUT_PIN, map(pid_tune_output, round(PID_MIN_OUT * 255 / 100), round(PID_MAX_OUT * 255 / 100), 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
+                mb.Hreg(PWR_HREG, map(pid_tune_output, 0, 255, 0, 100));
+                pwm_heat.write(HEAT_OUT_PIN, map(pid_tune_output, 0, 255, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
                 // This loop must run at the same speed as the PID control loop being tuned
                 while (micros() - microseconds < pid_parm.pid_CT)
                     delayMicroseconds(1);

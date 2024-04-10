@@ -58,7 +58,6 @@ typedef struct eeprom_settings
     double i;
     double d;
     double BT_tempfix;
-    double ET_tempfix;
 } pid_setting_t;
 
 // publc funciton

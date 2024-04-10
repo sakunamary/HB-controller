@@ -16,12 +16,12 @@ extern double BT_TEMP;
 
 
 pid_setting_t pid_parm = {
-    2000, // uint16_t pid_CT;
-    2.0,  // double p ;
-    0.12, // double i ;
-    5.0,  // double d ;
-    0.0,  // uint16_t BT_tempfix;
-    0.0   // uint16_t ET_tempfix;
+    0, // uint16_t pid_CT;
+    0.0,  // double p ;
+    0.0, // double i ;
+    0.0,  // double d ;
+    0.0  // uint16_t BT_tempfix;
+
 };
 
 void setup()
@@ -186,7 +186,7 @@ void setup()
 
     mb.addHreg(PID_SV_HREG);
     mb.addHreg(PID_STATUS_HREG);
-    mb.addHreg(PID_TUNE);
+
 
     // INIT MODBUS HREG VALUE
     mb.Hreg(BT_HREG, 0);      // 初始化赋值
@@ -200,22 +200,16 @@ void setup()
 
     mb.Hreg(PID_SV_HREG, 0);     // 初始化赋值
     mb.Hreg(PID_STATUS_HREG, 0); // 初始化赋值
-    mb.Hreg(PID_TUNE,0);
 
     // init PID
     Heat_pid_controller.begin(&BT_TEMP, &PID_output, &pid_sv, pid_parm.p, pid_parm.i, pid_parm.d);
     Heat_pid_controller.setSampleTime(pid_parm.pid_CT); // OPTIONAL - will ensure at least 10ms have past between successful compute() calls
-    Heat_pid_controller.setOutputLimits(0,255); //取值范围（0-255）
+    Heat_pid_controller.setOutputLimits(map(pid_out_min,0,100,0,255), map(pid_out_max,0,100,0,255)); //取值范围（0-255）-> (76-205)
     Heat_pid_controller.setBias(255.0 / 2.0);
     Heat_pid_controller.setWindUpLimits(-3, 3); // Groth bounds for the integral term to prevent integral wind-up
     Heat_pid_controller.start();
 
-    // INIT PID AUTOTUNE
 
-    tuner.setTargetInputValue(180.0);
-    tuner.setLoopInterval(pid_parm.pid_CT);
-    tuner.setOutputRange(map(pid_out_min,0,100,0,255), map(pid_out_max,0,100,0,255));//取值范围转换为（0-255）
-    tuner.setZNMode(PIDAutotuner::ZNModeBasicPID);
 
     ////////////////////////////////////////////////////////////////
     vTaskDelay(3000);
