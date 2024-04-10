@@ -235,6 +235,7 @@ void Task_PID_autotune(void *pvParameters)
             EEPROM.put(0, pid_parm);
             EEPROM.commit();
             Serial.printf("\nPID parms saved ...\n");
+            mb.Hreg(PID_TUNE,0);
             vTaskResume(xTask_modbus_control);
             // vTaskResume(xTASK_HMI_CMD_handle);
             // vTaskResume(xTASK_CMD_HMI);
