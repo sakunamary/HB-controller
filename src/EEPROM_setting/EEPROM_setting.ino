@@ -23,6 +23,9 @@ double pid_tune_output;
 double pid_out_max = PID_MAX_OUT;  // 取值范围 （0-100）
 double pid_out_min = PID_MIN_OUT;  // 取值范围 （0-100）
 pid_setting_t pid_parm;
+double temp[5] = { 0 };
+double temp_;
+int i, j;
 
 static TaskHandle_t xTask_PID_autotune = NULL;
 SemaphoreHandle_t xThermoDataMutex = NULL;
@@ -79,16 +82,16 @@ void setup() {
     Serial.print(" ");
   }
 
-  // xTaskCreatePinnedToCore(
-  //     Task_Thermo_get_data, "Thermo_get_data" //
-  //     ,
-  //     1024 * 4 // This stack size can be checked & adjusted by reading the Stack Highwater
-  //     ,
-  //     NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-  //     ,
-  //     NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-  // );
-  // Serial.printf("\nTASK=1:Thermo_get_data OK");
+  xTaskCreatePinnedToCore(
+    Task_Thermo_get_data, "Thermo_get_data"  //
+    ,
+    1024 * 4  // This stack size can be checked & adjusted by reading the Stack Highwater
+    ,
+    NULL, 3  // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    ,
+    NULL, 1  // Running Core decided by FreeRTOS,let core0 run wifi and BT
+  );
+  Serial.printf("\nTASK=1:Thermo_get_data OK");
 
   xTaskCreatePinnedToCore(
     Task_PID_autotune, "PID autotune"  //
@@ -133,41 +136,49 @@ void setup() {
 void loop() {
 }
 
-// void Task_Thermo_get_data(void *pvParameters) {  // function
+void Task_Thermo_get_data(void *pvParameters) {  // function
 
-//   /* Variable Definition */
-//   (void)pvParameters;
-//   TickType_t xLastWakeTime;
-//   const TickType_t xIntervel = 6000 / portTICK_PERIOD_MS;
-//   /* Task Setup and Initialize */
-//   // Initial the xLastWakeTime variable with the current time.
-//   xLastWakeTime = xTaskGetTickCount();
-//   // setup for the the SPI library:
+  /* Variable Definition */
+  (void)pvParameters;
+  TickType_t xLastWakeTime;
+  const TickType_t xIntervel = 3000 / portTICK_PERIOD_MS;
+  /* Task Setup and Initialize */
+  // Initial the xLastWakeTime variable with the current time.
+  xLastWakeTime = xTaskGetTickCount();
+  // setup for the the SPI library:
 
-//   while (1) {  // for loop
-//     // Wait for the next cycle (intervel 2000ms).
-//     vTaskDelayUntil(&xLastWakeTime, xIntervel);
+  while (1) {  // for loop
+    // Wait for the next cycle (intervel 2000ms).
+    vTaskDelayUntil(&xLastWakeTime, xIntervel);
 
-//     if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS)  // 给温度数组的最后一个数值写入数据
-//     {
-//       vTaskDelay(60);
-//       BT_TEMP = thermo_BT.temperature(RNOMINAL, RREF);  // CH3
-//       Serial.printf("\nBT : %4.2f", BT_TEMP);
-//       xSemaphoreGive(xThermoDataMutex);  // end of lock mutex
-//     }
-//   }
 
-// }  // function
+    for (i = 0; i < 5; i++) {
+      vTaskDelay(60);
+      temp[i] = thermo_BT.temperature(RNOMINAL, RREF);  // CH3
+      for (j = i + 1; j < 5; j++) {
+        if (temp[i] > temp[j]) {
+          temp_ = temp[i];
+          temp[i] = temp[j];
+          temp[j] = temp_;
+        }
+      }
+    }
+    if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS)  // 给温度数组的最后一个数值写入数据
+    {
+      BT_TEMP = temp[2];  //for PID AUTO TUNE
+      Serial.printf("\nBT : %4.2f", BT_TEMP);
+      xSemaphoreGive(xThermoDataMutex);  // end of lock mutex
+    }
+  }
+}  // function
 
 void Task_PID_autotune(void *pvParameters) {
   (void)pvParameters;
   uint32_t ulNotificationValue;  // 用来存放本任务的4个字节的notification value
   BaseType_t xResult;
- // const TickType_t xIntervel = 6000 / portTICK_PERIOD_MS;
+  const TickType_t xIntervel = 3000 / portTICK_PERIOD_MS;
 
-  double temp[5] = { 0 };
-  double temp_;
-  int i, j;
+
   while (1) {
     xResult = xTaskNotifyWait(0x00,                  // 在运行前这个命令之前，先清除这几位
                               0x00,                  // 运行后，重置所有的bits 0x00 or ULONG_MAX or 0xFFFFFFFF
@@ -185,23 +196,13 @@ void Task_PID_autotune(void *pvParameters) {
         prevMicroseconds = microseconds;
         microseconds = micros();
 
-        for (i = 0; i < 5; i++) {
-          vTaskDelay(60);
-          temp[i] = thermo_BT.temperature(RNOMINAL, RREF);  // CH3
-          for (j = i + 1; j < 5; j++) {
-            if (temp[i] > temp[j]) {
-              temp_ = temp[i];
-              temp[i] = temp[j];
-              temp[j] = temp_;
-            }
-          }
+
+        if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS)  // 给温度数组的最后一个数值写入数据
+        {
+          pid_tune_output = tuner.tunePID(BT_TEMP, microseconds);
+          pwm_heat.write(HEAT_OUT_PIN, map(pid_tune_output, 0, 255, 230, 850), frequency, resolution);  // 输出新火力pwr到SSRÍ
+          xSemaphoreGive(xThermoDataMutex);                                                             // end of lock mutex
         }
-        BT_TEMP = temp[2];  //for PID AUTO TUNE
-        Serial.printf("\nBT : %4.2f", BT_TEMP);
-
-        pid_tune_output = tuner.tunePID(BT_TEMP, microseconds);
-        pwm_heat.write(HEAT_OUT_PIN, map(pid_tune_output, 0, 255, 230, 850), frequency, resolution);  // 输出新火力pwr到SSRÍ
-
         // Serial.printf("\nPID Auto Tuneing...OUTPUT:%4.2f BT_temp:%4.2f\n", pid_tune_output, BT_TEMP);
         //  This loop must run at the same speed as the PID control loop being tuned
         while (micros() - microseconds < pid_parm.pid_CT)
