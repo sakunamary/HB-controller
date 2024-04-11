@@ -8,7 +8,6 @@
 #include <Arduino.h>
 #include "EEPROM.h"
 #include "config.h"
-#include "ArduPID.h"
 #include <pwmWrite.h>
 #include <pidautotuner.h>
 #include <Adafruit_MAX31865.h>
@@ -29,7 +28,6 @@ static TaskHandle_t xTask_PID_autotune = NULL;
 SemaphoreHandle_t xThermoDataMutex = NULL;
 
 Pwm pwm_heat = Pwm();
-ArduPID Heat_pid_controller;
 PIDAutotuner tuner = PIDAutotuner();
 Adafruit_MAX31865 thermo_BT = Adafruit_MAX31865(SPI_CS_BT, SPI_MOSI, SPI_MISO, SPI_SCK);  // CH3
 
@@ -114,7 +112,7 @@ void setup() {
   EEPROM.get(0, pid_parm);
 
   Serial.printf("\nEEPROM value check ...\n");
-  Serial.printf("\npid_CT:%d\n", pid_parm.pid_CT);
+  Serial.printf("\npid_CT:%ld\n", pid_parm.pid_CT);
   Serial.printf("\nPID k:%4.2f\n", pid_parm.p);
   Serial.printf("\nPID ki:%4.2f\n", pid_parm.i);
   Serial.printf("\nPID kd:%4.2f\n", pid_parm.d);
@@ -135,37 +133,37 @@ void setup() {
 void loop() {
 }
 
-void Task_Thermo_get_data(void *pvParameters) {  // function
+// void Task_Thermo_get_data(void *pvParameters) {  // function
 
-  /* Variable Definition */
-  (void)pvParameters;
-  TickType_t xLastWakeTime;
-  const TickType_t xIntervel = 6000 / portTICK_PERIOD_MS;
-  /* Task Setup and Initialize */
-  // Initial the xLastWakeTime variable with the current time.
-  xLastWakeTime = xTaskGetTickCount();
-  // setup for the the SPI library:
+//   /* Variable Definition */
+//   (void)pvParameters;
+//   TickType_t xLastWakeTime;
+//   const TickType_t xIntervel = 6000 / portTICK_PERIOD_MS;
+//   /* Task Setup and Initialize */
+//   // Initial the xLastWakeTime variable with the current time.
+//   xLastWakeTime = xTaskGetTickCount();
+//   // setup for the the SPI library:
 
-  while (1) {  // for loop
-    // Wait for the next cycle (intervel 2000ms).
-    vTaskDelayUntil(&xLastWakeTime, xIntervel);
+//   while (1) {  // for loop
+//     // Wait for the next cycle (intervel 2000ms).
+//     vTaskDelayUntil(&xLastWakeTime, xIntervel);
 
-    if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS)  // 给温度数组的最后一个数值写入数据
-    {
-      vTaskDelay(60);
-      BT_TEMP = thermo_BT.temperature(RNOMINAL, RREF);  // CH3
-      Serial.printf("\nBT : %4.2f", BT_TEMP);
-      xSemaphoreGive(xThermoDataMutex);  // end of lock mutex
-    }
-  }
+//     if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS)  // 给温度数组的最后一个数值写入数据
+//     {
+//       vTaskDelay(60);
+//       BT_TEMP = thermo_BT.temperature(RNOMINAL, RREF);  // CH3
+//       Serial.printf("\nBT : %4.2f", BT_TEMP);
+//       xSemaphoreGive(xThermoDataMutex);  // end of lock mutex
+//     }
+//   }
 
-}  // function
+// }  // function
 
 void Task_PID_autotune(void *pvParameters) {
   (void)pvParameters;
   uint32_t ulNotificationValue;  // 用来存放本任务的4个字节的notification value
   BaseType_t xResult;
-  const TickType_t xIntervel = 6000 / portTICK_PERIOD_MS;
+ // const TickType_t xIntervel = 6000 / portTICK_PERIOD_MS;
 
   double temp[5] = { 0 };
   double temp_;
@@ -198,11 +196,8 @@ void Task_PID_autotune(void *pvParameters) {
             }
           }
         }
-
-        BT_TEMP = thermo_BT.temperature(RNOMINAL, RREF);  // CH3
-
-
-
+        BT_TEMP = temp[2];  //for PID AUTO TUNE
+        Serial.printf("\nBT : %4.2f", BT_TEMP);
 
         pid_tune_output = tuner.tunePID(BT_TEMP, microseconds);
         pwm_heat.write(HEAT_OUT_PIN, map(pid_tune_output, 0, 255, 230, 850), frequency, resolution);  // 输出新火力pwr到SSRÍ
