@@ -50,9 +50,9 @@ void setup() {
 
   Serial.begin(BAUDRATE);
   thermo_BT.begin(MAX31865_2WIRE);  // set to 2WIRE or 4WIRE as necessary
-
-  // Init pwm output
-  pwm_heat.pause();
+  //thermo_BT.enableBias(true);
+    // Init pwm output
+    pwm_heat.pause();
   pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution);
   pwm_heat.resume();
   pwm_heat.printDebug();
@@ -66,10 +66,10 @@ void setup() {
     Serial.println("Initialed EEPROM,data will be writen after 3s...");
     delay(3000);
     EEPROM.get(0, pid_parm);
-    pid_parm.pid_CT = 10 * uS_TO_S_FACTOR;  // 30s. uinit is micros
-    pid_parm.p = 2.0;
-    pid_parm.i = 0.1;
-    pid_parm.d = 46.0;
+    pid_parm.pid_CT = 3 * uS_TO_S_FACTOR;  // 10s. uinit is micros
+    pid_parm.p = 3.58;
+    pid_parm.i = 0.65;
+    pid_parm.d = 13.5;
     pid_parm.BT_tempfix = 0.0;
     EEPROM.put(0, pid_parm);
     EEPROM.commit();
@@ -116,7 +116,7 @@ void setup() {
 
   Serial.printf("\nEEPROM value check ...\n");
   Serial.printf("\npid_CT:%ld\n", pid_parm.pid_CT);
-  Serial.printf("\nPID k:%4.2f\n", pid_parm.p);
+  Serial.printf("\nPID kp:%4.2f\n", pid_parm.p);
   Serial.printf("\nPID ki:%4.2f\n", pid_parm.i);
   Serial.printf("\nPID kd:%4.2f\n", pid_parm.d);
   Serial.printf("\nBT fix:%4.2f\n", pid_parm.BT_tempfix);
@@ -151,10 +151,12 @@ void Task_Thermo_get_data(void *pvParameters) {  // function
     // Wait for the next cycle (intervel 2000ms).
     vTaskDelayUntil(&xLastWakeTime, xIntervel);
 
-
     for (i = 0; i < 5; i++) {
-      vTaskDelay(60);
+      vTaskDelay(100);
       temp[i] = thermo_BT.temperature(RNOMINAL, RREF);  // CH3
+    }
+    i = 0;
+    for (i = 0; i < 5; i++) {
       for (j = i + 1; j < 5; j++) {
         if (temp[i] > temp[j]) {
           temp_ = temp[i];
@@ -166,7 +168,7 @@ void Task_Thermo_get_data(void *pvParameters) {  // function
     if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS)  // 给温度数组的最后一个数值写入数据
     {
       BT_TEMP = temp[2];  //for PID AUTO TUNE
-      Serial.printf("\nBT : %4.2f", BT_TEMP);
+      Serial.println(BT_TEMP) ;
       xSemaphoreGive(xThermoDataMutex);  // end of lock mutex
     }
   }

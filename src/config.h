@@ -42,8 +42,8 @@
 #define HMI_TX 13
 #define HMI_RX 14
 
-#define PID_MIN_OUT 30
-#define PID_MAX_OUT 80
+#define PID_MIN_OUT 5
+#define PID_MAX_OUT 60
 
 const int BUFFER_SIZE = 16;
 
@@ -53,7 +53,7 @@ const int BUFFER_SIZE = 16;
 //
 typedef struct eeprom_settings
 {
-    uint16_t pid_CT;
+    long pid_CT;
     double p;
     double i;
     double d;

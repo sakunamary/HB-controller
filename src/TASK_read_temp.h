@@ -57,11 +57,11 @@ void Task_Thermo_get_data(void *pvParameters)
         if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
         {
             vTaskDelay(60);
-            EX_TEMP = thermo_EX.readCelsius()+pid_parm.ET_tempfix; // CH2
+            EX_TEMP = thermo_EX.readCelsius(); // CH2
             vTaskDelay(60);
             INLET_TEMP = thermo_INLET.temperature(RNOMINAL, RREF); // CH1
             vTaskDelay(60);
-            BT_TEMP = thermo_BT.temperature(RNOMINAL, RREF)+pid_parm.BT_tempfix; // CH3
+            BT_TEMP = thermo_BT.temperature(RNOMINAL, RREF); // CH3
 
 #if defined(MODEL_M6S)
 
@@ -94,7 +94,7 @@ void Task_Thermo_get_data(void *pvParameters)
         make_frame_data(TEMP_DATA_Buffer, 1, int(round(EX_TEMP * 10)), 7);
         xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 3);
         // // send notify to TASK_data_to_HMI
-        xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
+       // xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
     }
 
 } // function
