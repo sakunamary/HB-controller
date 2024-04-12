@@ -22,7 +22,7 @@ const uint16_t FAN_HREG = 3006;        // COOLING FAN SWITCH
 const uint16_t HEAT_HREG = 3007;       // HEAT SWTICH
 const uint16_t PID_SV_HREG = 3008;     // PID SV
 const uint16_t PID_STATUS_HREG = 3009; // PID RUNNING STATUS
-const uint16_t PID_TUNE = 3010;
+
 
 int heat_pwr_to_SSR = 0;
 bool init_status = true;
@@ -83,9 +83,6 @@ void Task_modbus_control(void *pvParameters)
                         pid_sv = mb.Hreg(PID_SV_HREG) / 10;
                         Heat_pid_controller.start();
                         Heat_pid_controller.compute();                                               // 计算pid输出
-                        Heat_pid_controller.debug(&Serial, "Heat_pid_controller", PRINT_INPUT |      // Can include or comment out any of these terms to print
-                                                                                      PRINT_OUTPUT | // in the Serial plotter
-                                                                                      PRINT_SETPOINT | PRINT_BIAS | PRINT_P | PRINT_I | PRINT_D);
                         heat_pwr_to_SSR = map(PID_output, 0, 255, 0, 100); // 转换为格式 pid_output (0,255) -> (0,100)
                         last_PWR = heat_pwr_to_SSR;
                         mb.Hreg(PWR_HREG, heat_pwr_to_SSR);
@@ -98,10 +95,6 @@ void Task_modbus_control(void *pvParameters)
                     {
                         pid_sv = mb.Hreg(PID_SV_HREG) / 10; // 计算pid输出
                         Heat_pid_controller.compute();
-                        Heat_pid_controller.debug(&Serial, "Heat_pid_controller", PRINT_INPUT |      // Can include or comment out any of these terms to print
-                                                                                      PRINT_OUTPUT | // in the Serial plotter
-                                                                                      PRINT_SETPOINT | PRINT_BIAS | PRINT_P | PRINT_I | PRINT_D);
-
                         heat_pwr_to_SSR = map(PID_output, 0, 255, 0, 100); // 转换为格式 pid_output (0,255) -> (0,100)
                         last_PWR = heat_pwr_to_SSR;
                         mb.Hreg(PWR_HREG, heat_pwr_to_SSR);
