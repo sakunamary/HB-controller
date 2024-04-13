@@ -15,10 +15,10 @@ uint8_t macAddr[6];
 extern double BT_TEMP;
 
 pid_setting_t pid_parm ={
- 10 * uS_TO_S_FACTOR, // 10s. uinit is micros
-3.58,
-0.65,
-13.5,
+ 3 * uS_TO_S_FACTOR, // 10s. uinit is micros
+25.41,
+1.81,
+99.74,
 0.0
 }
 ;
@@ -53,7 +53,7 @@ void setup()
     thermo_INLET.begin(MAX31865_2WIRE); // set to 2WIRE or 4WIRE as necessary
     thermo_BT.begin(MAX31865_2WIRE);    // set to 2WIRE or 4WIRE as necessary
     thermo_BT.enable50Hz(true);
-    // thermo_BT.setThresholds(0x4000, 0x81FE);
+    //thermo_BT.setThresholds(0x4000, 0x81FE);
 
 #if defined(MODEL_M6S)
     thermo_ET.begin(MAX31865_2WIRE); // set to 2WIRE or 4WIRE as necessary
@@ -202,7 +202,7 @@ void setup()
     Heat_pid_controller.setSampleTime(pid_parm.pid_CT / 1000);                                               // OPTIONAL - will ensure at least 10ms have past between successful compute() calls
     Heat_pid_controller.setOutputLimits(map(pid_out_min, 0, 100, 0, 255), map(pid_out_max, 0, 100, 0, 255)); // 取值范围（0-255）-> (76-205)
     Heat_pid_controller.setBias(255.0 / 2.0);
-    Heat_pid_controller.setWindUpLimits(-3, 3); // Groth bounds for the integral term to prevent integral wind-up
+    Heat_pid_controller.setWindUpLimits(-1, 1); // Groth bounds for the integral term to prevent integral wind-up
     Heat_pid_controller.start();
 
     ////////////////////////////////////////////////////////////////

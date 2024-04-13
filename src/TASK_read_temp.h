@@ -16,7 +16,9 @@ double BT_TEMP;
 double ET_TEMP;
 double INLET_TEMP;
 double EX_TEMP;
-
+int i, j;
+double bt_temp[5];
+double temp_;
 extern pid_setting_t pid_parm;
 
 MAX6675 thermo_EX(SPI_SCK, SPI_CS_EX, SPI_MISO); // CH2  thermoEX
@@ -60,8 +62,21 @@ void Task_Thermo_get_data(void *pvParameters)
             EX_TEMP = thermo_EX.readCelsius(); // CH2
             vTaskDelay(60);
             INLET_TEMP = thermo_INLET.temperature(RNOMINAL, RREF); // CH1
-            vTaskDelay(60);
-            BT_TEMP = thermo_BT.temperature(RNOMINAL, RREF); // CH3
+            for (i = 0; i < 5; i++)
+            {
+                vTaskDelay(60);
+                bt_temp[i] = thermo_BT.temperature(RNOMINAL, RREF); // CH3
+                for (j = i + 1; j < 5; j++)
+                {
+                    if (bt_temp[i] > bt_temp[j])
+                    {
+                        temp_ = bt_temp[i];
+                        bt_temp[i] = bt_temp[j];
+                        bt_temp[j] = temp_;
+                    }
+                }
+            }
+            BT_TEMP = bt_temp[2]; // for bt temp more accuricy
 
 #if defined(MODEL_M6S)
 
@@ -88,13 +103,13 @@ void Task_Thermo_get_data(void *pvParameters)
 // #else
 //         make_frame_data(TEMP_DATA_Buffer, 1, 0, 9);
 #endif
-        make_frame_package(TEMP_DATA_Buffer,true, 1);
+        make_frame_package(TEMP_DATA_Buffer, true, 1);
         make_frame_data(TEMP_DATA_Buffer, 1, int(round(BT_TEMP * 10)), 3);
         make_frame_data(TEMP_DATA_Buffer, 1, int(round(INLET_TEMP * 10)), 5);
         make_frame_data(TEMP_DATA_Buffer, 1, int(round(EX_TEMP * 10)), 7);
         xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 3);
         // // send notify to TASK_data_to_HMI
-       // xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
+        // xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
     }
 
 } // function

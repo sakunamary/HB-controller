@@ -83,7 +83,7 @@ void Task_modbus_control(void *pvParameters)
                         pid_sv = mb.Hreg(PID_SV_HREG) / 10;
                         Heat_pid_controller.start();
                         Heat_pid_controller.compute();                                               // 计算pid输出
-                        heat_pwr_to_SSR = map(PID_output, 0, 255, 0, 100); // 转换为格式 pid_output (0,255) -> (0,100)
+                        heat_pwr_to_SSR = map(PID_output-2, 0, 255, 0, 100); // 转换为格式 pid_output (0,255) -> (0,100)
                         last_PWR = heat_pwr_to_SSR;
                         mb.Hreg(PWR_HREG, heat_pwr_to_SSR);
                         xSemaphoreGive(xThermoDataMutex);
@@ -95,7 +95,7 @@ void Task_modbus_control(void *pvParameters)
                     {
                         pid_sv = mb.Hreg(PID_SV_HREG) / 10; // 计算pid输出
                         Heat_pid_controller.compute();
-                        heat_pwr_to_SSR = map(PID_output, 0, 255, 0, 100); // 转换为格式 pid_output (0,255) -> (0,100)
+                        heat_pwr_to_SSR = map(PID_output-2, 0, 255, 0, 100); // 转换为格式 pid_output (0,255) -> (0,100)
                         last_PWR = heat_pwr_to_SSR;
                         mb.Hreg(PWR_HREG, heat_pwr_to_SSR);
                         xSemaphoreGive(xThermoDataMutex);
