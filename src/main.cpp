@@ -14,14 +14,12 @@ char ap_name[30];
 uint8_t macAddr[6];
 extern double BT_TEMP;
 
-pid_setting_t pid_parm ={
- 3 * uS_TO_S_FACTOR, // 10s. uinit is micros
-25.41,
-1.81,
-99.74,
-0.0
-}
-;
+pid_setting_t pid_parm = {
+    3 * uS_TO_S_FACTOR, // 10s. uinit is micros
+    25.41,
+    1.81,
+    99.74,
+    0.0};
 
 void setup()
 {
@@ -50,7 +48,7 @@ void setup()
 #endif
 
     // INIT SENSOR
-    ADC_MCP3424.NewConversion();  // New conversion is initiated
+    ADC_MCP3424.NewConversion(); // New conversion is initiated
 
     // 初始化网络服务
     WiFi.macAddress(macAddr);
@@ -167,6 +165,9 @@ void setup()
     mb.addHreg(PID_SV_HREG);
     mb.addHreg(PID_STATUS_HREG);
 
+    mb.addHreg(AMB_RH_HREG);
+    mb.addHreg(AMB_TEMP_HREG);
+
     // INIT MODBUS HREG VALUE
     mb.Hreg(BT_HREG, 0);      // 初始化赋值
     mb.Hreg(ET_HREG, 0);      // 初始化赋值
@@ -180,10 +181,13 @@ void setup()
     mb.Hreg(PID_SV_HREG, 0);     // 初始化赋值
     mb.Hreg(PID_STATUS_HREG, 0); // 初始化赋值
 
+    mb.Hreg(AMB_RH_HREG, 0);   // 初始化赋值
+    mb.Hreg(AMB_TEMP_HREG, 0); // 初始化赋值
+
     // init PID
 
     // read pid data from EEPROM
- 
+
     Serial.printf("\nEEPROM value check ...\n");
     Serial.printf("\npid_CT:%ld\n", pid_parm.pid_CT);
     Serial.printf("\nPID kp:%4.2f\n", pid_parm.p);

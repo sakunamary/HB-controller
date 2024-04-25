@@ -52,7 +52,7 @@ const int BUFFER_SIZE = 16;
 
 // parametsrs of MAX31865
 #define RREF 100
-#define RNOMINAL 10000
+#define RNOMINAL 4700
 #define ADC_BIT 16
 
 //

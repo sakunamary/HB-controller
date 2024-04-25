@@ -8,39 +8,39 @@
 #include "TypeK.h"
 #include <Adafruit_AHTX0.h>
 
-
 #include <WiFi.h>
 
 #include <ModbusIP_ESP8266.h>
 ModbusIP mb; // declear object
+uint8_t MCP3424_address = 0x68;
+long Voltage; // Array used to store results
+
+MCP3424 ADC_MCP3424(MCP3424_address); // Declaration of MCP3424 A2=0 A1=1 A0=0
+Adafruit_AHTX0 aht;
+sensors_event_t humidity_aht20, temp_aht20;
+TypeK temp_K_cal;
 
 double BT_TEMP;
 double ET_TEMP;
 double INLET_TEMP;
 double EX_TEMP;
+double AMB_RH;
+double AMB_TEMP;
+
 int i, j;
 double bt_temp[5];
 double temp_;
 extern pid_setting_t pid_parm;
 
-
 // Need this for the lower level access to set them up.
-uint8_t address = 0x68;
-long Voltage; // Array used to store results
-
-
-MCP3424 ADC_MPC3424(address); // Declaration of MCP3424 A2=0 A1=1 A0=0
-Adafruit_AHTX0 aht;
-sensors_event_t temp_humidity, temp_aht20;
-TypeK temp_K_cal;
-
-
 
 // Modbus Registers Offsets
 const uint16_t BT_HREG = 3001;
 const uint16_t ET_HREG = 3002;
 const uint16_t INLET_HREG = 3003;
 const uint16_t EXHAUST_HREG = 3004;
+const uint16_t AMB_RH_HREG = 3010;
+const uint16_t AMB_TEMP_HREG = 3011;
 
 void Task_Thermo_get_data(void *pvParameters)
 { // function
@@ -54,7 +54,6 @@ void Task_Thermo_get_data(void *pvParameters)
     /* Task Setup and Initialize */
     // Initial the xLastWakeTime variable with the current time.
     xLastWakeTime = xTaskGetTickCount();
-    // setup for the the SPI library:
 
     while (1)
     { // for loop
@@ -63,14 +62,29 @@ void Task_Thermo_get_data(void *pvParameters)
 
         if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
         {
-            vTaskDelay(60);
-            EX_TEMP = thermo_EX.readCelsius(); // CH2
-            vTaskDelay(60);
-            INLET_TEMP = thermo_INLET.temperature(RNOMINAL, RREF); // CH1
+            aht.getEvent(&humidity_aht20, &temp_aht20); // populate temp and humidity objects with fresh data
+            AMB_TEMP = temp_aht20.temperature;
+            AMB_RH = humidity_aht20.relative_humidity;
+            vTaskDelay(50);
+
+            ADC_MCP3424.Configuration(2, ADC_BIT, 1, 8);                          // MCP3424 is configured to channel i with 18 bits resolution, continous mode and gain defined to 8
+            Voltage = ADC_MCP3424.Measure();                                              // Measure is stocked in array Voltage, note that the library will wait for a completed conversion that takes around 200 ms@18bits
+            EX_TEMP = temp_K_cal.Temp_C(Voltage * 0.001, temp_aht20.temperature); // CH2
+
+            vTaskDelay(50);
+            ADC_MCP3424.Configuration(1, ADC_BIT, 1, 1);
+            Voltage = ADC_MCP3424.Measure();
+            INLET_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH1
+            // vTaskDelay(50);
+            // ADC_MPC3424.Configuration(3, ADC_BIT, 1, 1);
+            // Voltage = MCP.Measure();
+            // BT_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH1
+            ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
             for (i = 0; i < 5; i++)
             {
-                vTaskDelay(60);
-                bt_temp[i] = thermo_BT.temperature(RNOMINAL, RREF); // CH3
+                vTaskDelay(50);
+                Voltage = ADC_MCP3424.Measure();
+                bt_temp[i] = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH3
                 for (j = i + 1; j < 5; j++)
                 {
                     if (bt_temp[i] > bt_temp[j])
@@ -85,8 +99,9 @@ void Task_Thermo_get_data(void *pvParameters)
 
 #if defined(MODEL_M6S)
 
-            vTaskDelay(60);
-            ET_TEMP = thermo_ET.temperature(RNOMINAL, RREF);
+            ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
+            Voltage = ADC_MCP3424.Measure();
+            ET_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH4
 #endif
             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
         }
@@ -98,9 +113,12 @@ void Task_Thermo_get_data(void *pvParameters)
         Serial.println();
 #endif
         // update  Hreg data
-        mb.Hreg(BT_HREG, int(round(BT_TEMP * 10)));       // 初始化赋值
-        mb.Hreg(INLET_HREG, int(round(INLET_TEMP * 10))); // 初始化赋值
-        mb.Hreg(EXHAUST_HREG, int(round(EX_TEMP * 10)));  // 初始化赋值
+        mb.Hreg(BT_HREG, int(round(BT_TEMP * 10)));        // 初始化赋值
+        mb.Hreg(INLET_HREG, int(round(INLET_TEMP * 10)));  // 初始化赋值
+        mb.Hreg(EXHAUST_HREG, int(round(EX_TEMP * 10)));   // 初始化赋值
+        mb.Hreg(AMB_RH_HREG, int(round(AMB_RH * 10)));     // 初始化赋值
+        mb.Hreg(AMB_TEMP_HREG, int(round(AMB_TEMP * 10))); // 初始化赋值
+
 // making the HMI frame
 #if defined(MODEL_M6S)
         mb.Hreg(ET_HREG, int(round(ET_TEMP * 10))); // 初始化赋值
