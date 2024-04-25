@@ -50,14 +50,7 @@ void setup()
 #endif
 
     // INIT SENSOR
-    thermo_INLET.begin(MAX31865_2WIRE); // set to 2WIRE or 4WIRE as necessary
-    thermo_BT.begin(MAX31865_2WIRE);    // set to 2WIRE or 4WIRE as necessary
-    thermo_BT.enable50Hz(true);
-    //thermo_BT.setThresholds(0x4000, 0x81FE);
-
-#if defined(MODEL_M6S)
-    thermo_ET.begin(MAX31865_2WIRE); // set to 2WIRE or 4WIRE as necessary
-#endif
+    ADC_MCP3424.NewConversion();  // New conversion is initiated
 
     // 初始化网络服务
     WiFi.macAddress(macAddr);

@@ -42,14 +42,19 @@
 #define HMI_TX 13
 #define HMI_RX 14
 
+#define I2C_SDA 1
+#define I2C_SCL 2
+
 #define PID_MIN_OUT 0
 #define PID_MAX_OUT 60
 
 const int BUFFER_SIZE = 16;
 
 // parametsrs of MAX31865
-#define RREF 430.0
-#define RNOMINAL 100.0
+#define RREF 100
+#define RNOMINAL 10000
+#define ADC_BIT 16
+
 //
 typedef struct eeprom_settings
 {

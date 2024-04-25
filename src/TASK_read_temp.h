@@ -4,9 +4,11 @@
 #include <Arduino.h>
 #include "config.h"
 #include <Wire.h>
-#include "max6675.h"
+#include <MCP3424.h>
+#include "TypeK.h"
+#include <Adafruit_AHTX0.h>
 
-#include <Adafruit_MAX31865.h>
+
 #include <WiFi.h>
 
 #include <ModbusIP_ESP8266.h>
@@ -21,15 +23,18 @@ double bt_temp[5];
 double temp_;
 extern pid_setting_t pid_parm;
 
-MAX6675 thermo_EX(SPI_SCK, SPI_CS_EX, SPI_MISO); // CH2  thermoEX
 
-// Use software SPI: CS, DI, DO, CLK
-Adafruit_MAX31865 thermo_INLET = Adafruit_MAX31865(SPI_CS_INLET, SPI_MOSI, SPI_MISO, SPI_SCK); // CH1
-Adafruit_MAX31865 thermo_BT = Adafruit_MAX31865(SPI_CS_BT, SPI_MOSI, SPI_MISO, SPI_SCK);       // CH3
+// Need this for the lower level access to set them up.
+uint8_t address = 0x68;
+long Voltage; // Array used to store results
 
-#if defined(MODEL_M6S)
-Adafruit_MAX31865 thermo_ET = Adafruit_MAX31865(SPI_CS_ET, SPI_MOSI, SPI_MISO, SPI_SCK); // CH4
-#endif
+
+MCP3424 ADC_MPC3424(address); // Declaration of MCP3424 A2=0 A1=1 A0=0
+Adafruit_AHTX0 aht;
+sensors_event_t temp_humidity, temp_aht20;
+TypeK temp_K_cal;
+
+
 
 // Modbus Registers Offsets
 const uint16_t BT_HREG = 3001;
