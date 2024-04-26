@@ -25,8 +25,7 @@ void setup()
 {
 
     xThermoDataMutex = xSemaphoreCreateMutex();
-    xSerialReadBufferMutex = xSemaphoreCreateMutex();
-
+    
     pinMode(SYSTEM_RLY, OUTPUT);
     pinMode(FAN_RLY, OUTPUT);
     pinMode(HEAT_RLY, OUTPUT);
@@ -80,70 +79,31 @@ void setup()
 
     /*---------- Task Definition ---------------------*/
     // Setup tasks to run independently.
-    xTaskCreatePinnedToCore(
+    xTaskCreate(
         Task_Thermo_get_data, "Thermo_get_data" //
         ,
         1024 * 8 // This stack size can be checked & adjusted by reading the Stack Highwater
         ,
         NULL, 5 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
         ,
-        NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+        NULL// Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nTASK=1:Thermo_get_data OK");
 #endif
 
-    xTaskCreatePinnedToCore(
+    xTaskCreate(
         Task_modbus_control, "modbus_control" //
         ,
         1024 * 10 // This stack size can be checked & adjusted by reading the Stack Highwater
         ,
         NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
         ,
-        &xTask_modbus_control, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+        &xTask_modbus_control// Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nTASK=2:modbus_control OK");
 #endif
-
-    //     xTaskCreatePinnedToCore(
-    //         TASK_data_to_HMI, "data_to_HMI" //
-    //         ,
-    //         1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
-    //         ,
-    //         NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    //         ,
-    //         &xTASK_data_to_HMI, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    //     );
-    // #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    //     Serial.printf("\nTASK=3:data_to_HMI OK");
-    // #endif
-
-    //     xTaskCreatePinnedToCore(
-    //         TASK_CMD_FROM_HMI, "CMD_FROM_HMI" //
-    //         ,
-    //         1024 * 2 // This stack size can be checked & adjusted by reading the Stack Highwater
-    //         ,
-    //         NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    //         ,
-    //         &xTASK_CMD_HMI, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    //     );
-    // #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    //     Serial.printf("\nTASK=4:CMD_FROM_HMI OK");
-    // #endif
-
-    //     xTaskCreatePinnedToCore(
-    //         TASK_HMI_CMD_handle, "handle_CMD_FROM_HMI" //
-    //         ,
-    //         1024 * 8 // This stack size can be checked & adjusted by reading the Stack Highwater
-    //         ,
-    //         NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    //         ,
-    //         &xTASK_HMI_CMD_handle, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    //     );
-    // #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    //     Serial.printf("\nTASK=5:handle_CMD_FROM_HMI OK");
-    // #endif
 
     // INIT MODBUS
 

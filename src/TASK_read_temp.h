@@ -49,7 +49,6 @@ void Task_Thermo_get_data(void *pvParameters)
     (void)pvParameters;
     TickType_t xLastWakeTime;
     BaseType_t xResult;
-    uint8_t TEMP_DATA_Buffer[BUFFER_SIZE];
     const TickType_t xIntervel = 2000 / portTICK_PERIOD_MS;
     /* Task Setup and Initialize */
     // Initial the xLastWakeTime variable with the current time.
@@ -98,7 +97,6 @@ void Task_Thermo_get_data(void *pvParameters)
             BT_TEMP = bt_temp[2]; // for bt temp more accuricy
 
 #if defined(MODEL_M6S)
-
             ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
             Voltage = ADC_MCP3424.Measure();
             ET_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH4
@@ -122,43 +120,9 @@ void Task_Thermo_get_data(void *pvParameters)
 // making the HMI frame
 #if defined(MODEL_M6S)
         mb.Hreg(ET_HREG, int(round(ET_TEMP * 10))); // 初始化赋值
-//         make_frame_data(TEMP_DATA_Buffer, 1, int(round(ET_TEMP * 10)), 9);
-// #else
-//         make_frame_data(TEMP_DATA_Buffer, 1, 0, 9);
 #endif
-        make_frame_package(TEMP_DATA_Buffer, true, 1);
-        make_frame_data(TEMP_DATA_Buffer, 1, int(round(BT_TEMP * 10)), 3);
-        make_frame_data(TEMP_DATA_Buffer, 1, int(round(INLET_TEMP * 10)), 5);
-        make_frame_data(TEMP_DATA_Buffer, 1, int(round(EX_TEMP * 10)), 7);
-        xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 3);
-        // // send notify to TASK_data_to_HMI
-        // xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
     }
 
 } // function
 
 #endif
-// HB --> HMI的数据帧 FrameLenght = 16
-// 帧头: 69 FF
-// 类型: 01温度数据
-// 温度1: 00 00 // uint16
-// 温度2: 00 00 // uint16
-// 温度3: 00 00 // uint16
-// 温度4: 00 00 // uint16
-// NULL: 00 00
-// 帧尾:FF FF FF
-
-// HB --> HMI的控制状态帧 FrameLenght = 16
-// 帧头: 69 FF
-// 类型:02控制数据
-// 系统OK : 00
-// 火力: 00 00 // uint16
-// PID SV : 00 00 // uint16
-// PID_STATUS: 00 // uint8
-// 火力开关: 00
-// 冷却开关: 00 // uint16
-// PID_TUNE :00
-// NULL: 00
-// 帧尾:FF FF FF
-
-// 温度为小端模式   dec 2222  hex AE 08
