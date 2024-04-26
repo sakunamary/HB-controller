@@ -1,0 +1,5 @@
+I2C_EEPROM	KEYWORD1
+write	KEYWORD2
+writeSerial	KEYWORD2
+read	KEYWORD2
+readSerial	KEYWORD2

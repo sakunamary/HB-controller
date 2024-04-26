@@ -1,18 +1,17 @@
 #include <Arduino.h>
 #include <WiFi.h>
-#include "EEPROM.h"
 #include "config.h"
-
+#include "I2C_EEPROM.h"
 #include "TASK_read_temp.h"
 #include "TASK_modbus_control.h"
 
-// #include "TASK_HMI_Serial.h"
 
 String local_IP;
 
 char ap_name[30];
 uint8_t macAddr[6];
 extern double BT_TEMP;
+I2C_EEPROM EEPEOM(0x50);
 
 pid_setting_t pid_parm = {
     3 * uS_TO_S_FACTOR, // 10s. uinit is micros

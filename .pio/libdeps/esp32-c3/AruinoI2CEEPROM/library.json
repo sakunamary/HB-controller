@@ -1,0 +1,13 @@
+{
+  "name": "AruinoI2CEEPROM",
+  "version": "1.0.0",
+  "keywords": "I2C, EEPROM",
+  "description": "Library for the atmel AT24C serial EEPROM chips",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/nozols/ArduinoI2CEEPROM.git"
+  },
+  "frameworks": "Arduino",
+  "platforms": "*"
+}
