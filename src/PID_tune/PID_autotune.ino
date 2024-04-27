@@ -6,11 +6,10 @@
    turned off and may be retrieved later by another sketch.
 */
 #include <Arduino.h>
-#include "EEPROM.h"
 #include "config.h"
 #include <pwmWrite.h>
 #include <pidautotuner.h>
-#include <Adafruit_MAX31865.h>
+
 
 const int HEAT_OUT_PIN = PWM_HEAT;  // GPIO26
 const uint32_t frequency = PWM_FREQ;
