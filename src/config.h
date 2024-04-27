@@ -2,10 +2,10 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#define VERSION "1.0.3"
- #define DEBUG_MODE
+#define VERSION "1.0.5"
+ //#define DEBUG_MODE
 //  uncomment to make work for HB M6SE ,default is work for HB M2SE
-//  #define MODEL_M6S
+ #define MODEL_M6S
 
 
 // pwm setting
@@ -51,7 +51,7 @@ const int BUFFER_SIZE = 16;
 // parametsrs of MAX31865
 #define RREF 100
 #define RNOMINAL 1000
-#define ADC_BIT 16
+#define ADC_BIT 18
 
 //
 typedef struct eeprom_settings

@@ -65,40 +65,41 @@ void Task_Thermo_get_data(void *pvParameters)
                 AMB_TEMP = aht20.getTemperature_C();
                 AMB_RH = aht20.getHumidity_RH();
             }
-            vTaskDelay(50);
-            ADC_MCP3424.Configuration(2, ADC_BIT, 1, 8);                          // MCP3424 is configured to channel i with 18 bits resolution, continous mode and gain defined to 8
-            Voltage = ADC_MCP3424.Measure();                                      // Measure is stocked in array Voltage, note that the library will wait for a completed conversion that takes around 200 ms@18bits
+
+            vTaskDelay(200);
+            ADC_MCP3424.Configuration(2, ADC_BIT, 1, 8);            // MCP3424 is configured to channel i with 18 bits resolution, continous mode and gain defined to 8
+            Voltage = ADC_MCP3424.Measure();                        // Measure is stocked in array Voltage, note that the library will wait for a completed conversion that takes around 200 ms@18bits
             EX_TEMP = temp_K_cal.Temp_C(Voltage * 0.001, AMB_TEMP); // CH2
 
-            vTaskDelay(50);
+            vTaskDelay(200);
             ADC_MCP3424.Configuration(1, ADC_BIT, 1, 1);
             Voltage = ADC_MCP3424.Measure();
             INLET_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH1
-            // vTaskDelay(50);
-            // ADC_MPC3424.Configuration(3, ADC_BIT, 1, 1);
-            // Voltage = MCP.Measure();
-            // BT_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH1
+            vTaskDelay(200);
             ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
-            for (i = 0; i < 5; i++)
-            {
-                vTaskDelay(50);
-                Voltage = ADC_MCP3424.Measure();
-                bt_temp[i] = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH3
-                for (j = i + 1; j < 5; j++)
-                {
-                    if (bt_temp[i] > bt_temp[j])
-                    {
-                        temp_ = bt_temp[i];
-                        bt_temp[i] = bt_temp[j];
-                        bt_temp[j] = temp_;
-                    }
-                }
-            }
-            BT_TEMP = bt_temp[2]; // for bt temp more accuricy
+            Voltage = ADC_MCP3424.Measure();
+            BT_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH1
+                                                                                                                   // ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
+                                                                                                                   // for (i = 0; i < 5; i++)
+                                                                                                                   // {
+                                                                                                                   //     vTaskDelay(50);
+                                                                                                                   //     Voltage = ADC_MCP3424.Measure();
+                                                                                                                   //     bt_temp[i] = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH3
+                                                                                                                   //     for (j = i + 1; j < 5; j++)
+                                                                                                                   //     {
+                                                                                                                   //         if (bt_temp[i] > bt_temp[j])
+                                                                                                                   //         {
+                                                                                                                   //             temp_ = bt_temp[i];
+                                                                                                                   //             bt_temp[i] = bt_temp[j];
+                                                                                                                   //             bt_temp[j] = temp_;
+                                                                                                                   //         }
+                                                                                                                   //     }
+                                                                                                                   // }
+                                                                                                                   // BT_TEMP = bt_temp[2]; // for bt temp more accuricy
 
 #if defined(MODEL_M6S)
-
-            ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
+            vTaskDelay(200);
+            ADC_MCP3424.Configuration(4, ADC_BIT, 1, 1);
             Voltage = ADC_MCP3424.Measure();
             ET_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH4
 #endif
@@ -115,7 +116,7 @@ void Task_Thermo_get_data(void *pvParameters)
 // making the HMI frame
 #if defined(MODEL_M6S)
         mb.Hreg(ET_HREG, int(round(ET_TEMP * 10))); // 初始化赋值
-        //         make_frame_data(TEMP_DATA_Buffer, 1, int(round(ET_TEMP * 10)), 9);
+                                                    //         make_frame_data(TEMP_DATA_Buffer, 1, int(round(ET_TEMP * 10)), 9);
 
 #endif
         make_frame_package(TEMP_DATA_Buffer, true, 1);
