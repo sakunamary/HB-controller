@@ -52,6 +52,8 @@ void Task_Thermo_get_data(void *pvParameters)
     /* Task Setup and Initialize */
     // Initial the xLastWakeTime variable with the current time.
     xLastWakeTime = xTaskGetTickCount();
+    // INIT SENSOR
+    ADC_MCP3424.NewConversion(); // New conversion is initiated
 
     while (1)
     { // for loop

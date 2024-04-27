@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <config.h>
+#include <WiFi.h>
 #include "ArduPID.h"
 #include <pwmWrite.h>
 
