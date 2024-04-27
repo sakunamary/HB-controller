@@ -3,12 +3,10 @@
 #define __CONFIG_H__
 
 #define VERSION "1.0.3"
-// #define DEBUG_MODE
+ #define DEBUG_MODE
 //  uncomment to make work for HB M6SE ,default is work for HB M2SE
 //  #define MODEL_M6S
-//  uncomment to switch to MODBUS RTU   ,default is work in MODBUS TCP MODE
-//  #define MODBUS_RTU
-#define SLAVE_ID 1 // MODBUS RTU SLAVE ID
+
 
 // pwm setting
 #define PWM_FREQ 10000

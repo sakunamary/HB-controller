@@ -7,9 +7,7 @@
 #include <MCP3424.h>
 #include "TypeK.h"
 #include <Adafruit_AHTX0.h>
-
 #include <WiFi.h>
-
 #include <ModbusIP_ESP8266.h>
 ModbusIP mb; // declear object
 uint8_t MCP3424_address = 0x68;
@@ -106,12 +104,6 @@ void Task_Thermo_get_data(void *pvParameters)
             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
         }
 
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-        Serial.printf("CH3 bt:%d\n", int(round(BT_TEMP * 10)));
-        Serial.printf("CH1 inlet:%d\n", int(round(INLET_TEMP * 10)));
-        Serial.printf("CH2 ex:%d\n", int(round(BT_TEMP * 10)));
-        Serial.println();
-#endif
         // update  Hreg data
         mb.Hreg(BT_HREG, int(round(BT_TEMP * 10)));        // 初始化赋值
         mb.Hreg(INLET_HREG, int(round(INLET_TEMP * 10)));  // 初始化赋值
@@ -123,8 +115,7 @@ void Task_Thermo_get_data(void *pvParameters)
 #if defined(MODEL_M6S)
         mb.Hreg(ET_HREG, int(round(ET_TEMP * 10))); // 初始化赋值
 //         make_frame_data(TEMP_DATA_Buffer, 1, int(round(ET_TEMP * 10)), 9);
-// #else
-//         make_frame_data(TEMP_DATA_Buffer, 1, 0, 9);
+
 #endif
         make_frame_package(TEMP_DATA_Buffer, true, 1);
         make_frame_data(TEMP_DATA_Buffer, 1, int(round(BT_TEMP * 10)), 3);

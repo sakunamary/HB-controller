@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <WiFi.h>
-#include "EEPROM.h"
 #include "config.h"
 
 #include "TASK_read_temp.h"
@@ -36,9 +35,7 @@ void setup()
     digitalWrite(HEAT_RLY, LOW);   // 初始化电路启动；
 
     // read pid data from EEPROM
-    // EEPROM.begin(sizeof(pid_parm));
-    // EEPROM.get(0, pid_parm);
-
+   // Wire.setPins(I2C_SDA,I2C_SCL);
     Serial.begin(BAUDRATE); // for MODBUS TCP debug
 
     // Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
@@ -187,13 +184,6 @@ void setup()
     // init PID
 
     // read pid data from EEPROM
-
-    Serial.printf("\nEEPROM value check ...\n");
-    Serial.printf("\npid_CT:%ld\n", pid_parm.pid_CT);
-    Serial.printf("\nPID kp:%4.2f\n", pid_parm.p);
-    Serial.printf("\nPID ki:%4.2f\n", pid_parm.i);
-    Serial.printf("\nPID kd:%4.2f\n", pid_parm.d);
-    Serial.printf("\nBT fix:%4.2f\n", pid_parm.BT_tempfix);
 
     Heat_pid_controller.begin(&BT_TEMP, &PID_output, &pid_sv, pid_parm.p, pid_parm.i, pid_parm.d);
     Heat_pid_controller.setSampleTime(pid_parm.pid_CT / 1000);                                               // OPTIONAL - will ensure at least 10ms have past between successful compute() calls

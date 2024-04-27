@@ -5,7 +5,6 @@
 #include <config.h>
 #include "ArduPID.h"
 #include <pwmWrite.h>
-#include <pidautotuner.h>
 
 HardwareSerial Serial_HMI(2);      // D16 RX_drumer  D17 TX_drumer
 const int HEAT_OUT_PIN = PWM_HEAT; // GPIO26
@@ -14,7 +13,7 @@ const byte resolution = PWM_RESOLUTION; // pwm -0-4096
 
 Pwm pwm_heat = Pwm();
 ArduPID Heat_pid_controller;
-PIDAutotuner tuner = PIDAutotuner();
+
 
 uint16_t last_PWR;
 const uint16_t PWR_HREG = 3005;        // HEAT PWR
