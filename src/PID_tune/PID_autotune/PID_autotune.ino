@@ -5,51 +5,61 @@
    These values will stay in the EEPROM when the board is
    turned off and may be retrieved later by another sketch.
 */
+
+#define LOCATION_SETTINGS 0
+
 #include <Arduino.h>
 #include "config.h"
+#include <MCP3424.h>
+#include "DFRobot_AHT20.h"
 #include <pwmWrite.h>
 #include <pidautotuner.h>
-#include <Wire.h>
-#include <MCP3424.h>
-#include "TypeK.h"
+#include "SparkFun_External_EEPROM.h" // Click here to get the library: http://librarymanager/All#SparkFun_External_EEPROM
 
-
-// #include <Adafruit_AHTX0.h>
-
+uint8_t MCP3424_address = 0x68;
+long Voltage;                      // Array used to store results
 const int HEAT_OUT_PIN = PWM_HEAT; // GPIO26
 const uint32_t frequency = PWM_FREQ;
 const byte resolution = PWM_RESOLUTION; // pwm -0-1023
 
-int address = 0;
 double BT_TEMP;
+double AMB_RH;
+double AMB_TEMP;
+
 long prevMicroseconds;
 long microseconds;
 double pid_tune_output;
 double pid_out_max = PID_MAX_OUT; // 取值范围 （0-100）
 double pid_out_min = PID_MIN_OUT; // 取值范围 （0-100）
-pid_setting_t pid_parm;
+
+pid_setting_t pid_parm = {
+    .pid_CT = 3,
+    .p = 3.0,
+    .i = 0.12,
+    .d = 33.0,
+    .BT_tempfix = 0.0,
+    .ET_tempfix = 0.0,
+    .inlet_tempfix = 0.0,
+    .EX_tempfix = 0.0};
+
 double temp[5] = {0};
 double temp_;
 int i, j;
-uint8_t MCP3424_address = 0x68;
-long Voltage; // Array used to store results
 
 static TaskHandle_t xTask_PID_autotune = NULL;
 SemaphoreHandle_t xThermoDataMutex = NULL;
 
 Pwm pwm_heat = Pwm();
 PIDAutotuner tuner = PIDAutotuner();
-MCP3424 ADC_MCP3424(MCP3424_address); // Declaration of MCP3424 A2=0 A1=1 A0=0
-AT24Cxx I2C_EPPROM(EEPROM_ADDRESS, 64);
-// Adafruit_AHTX0 aht;
-// sensors_event_t humidity_aht20, temp_aht20;
-// TypeK temp_K_cal;
+ExternalEEPROM I2C_EEPROM;
 
 void Task_Thermo_get_data(void *pvParameters);
 void Task_PID_autotune(void *pvParameters);
+void loadUserSettings();
 
 void setup()
 {
+
     // Prepare working .....
     xThermoDataMutex = xSemaphoreCreateMutex();
     pinMode(SYSTEM_RLY, OUTPUT);
@@ -60,8 +70,10 @@ void setup()
     digitalWrite(SYSTEM_RLY, HIGH); // 启动机器
 
     Serial.begin(BAUDRATE);
+    aht20.begin();
+    ADC_MCP3424.NewConversion();
+    I2C_EEPROM.setMemoryType(32);
 
-    ADC_MCP3424.NewConversion(); // New conversion is initiated
     //  Init pwm output
     pwm_heat.pause();
     pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution);
@@ -69,69 +81,69 @@ void setup()
     pwm_heat.printDebug();
 
     // part I :init setting
-
-    Serial.println("Please Wait this may take a while depending upon you EEPROM size.");
-    Serial.print("Size of EEPROM : ");
-    Serial.print(I2C_EPPROM.length());
-    Serial.println(" KB");
-    for (int i = 0; i < I2C_EPPROM.length(); i++)
+    Serial.println("start EEPROM setting ...");
+    if (!I2C_EEPROM.begin())
     {
-        I2C_EPPROM.update(i, 0x00);
-        if ((i % 512) == 0)
-        {
-            Serial.print(i);
-            Serial.println(" Address Cleared");
-        }
+        Serial.println("failed to initialise EEPROM");
+        delay(1000000);
+    }
+    else
+    {
+        Serial.println("Initialed EEPROM,load data will be writen after 3s...");
+        delay(3000);
+        loadUserSettings();
+
+        Serial.printf("\nEEPROM value check ...\n");
+        Serial.printf("\npid_CT:%d\n", pid_parm.pid_CT);
+        Serial.printf("\nPID kp:%4.2f\n", pid_parm.p);
+        Serial.printf("\nPID ki:%4.2f\n", pid_parm.i);
+        Serial.printf("\nPID kd:%4.2f\n", pid_parm.d);
+        Serial.printf("\nBT fix:%4.2f\n", pid_parm.BT_tempfix);
+        Serial.printf("\nET fix:%4.2f\n", pid_parm.ET_tempfix);
+        Serial.printf("\nInlet fix:%4.2f\n", pid_parm.inlet_tempfix);
+        Serial.printf("\nEX fix:%4.2f\n", pid_parm.EX_tempfix);
     }
 
-    // Print Msg When Completed.
-    Serial.println("EEPROM Erase completed.");
+    xTaskCreatePinnedToCore(
+        Task_Thermo_get_data, "Thermo_get_data" //
+        ,
+        1024 * 4 // This stack size can be checked & adjusted by reading the Stack Highwater
+        ,
+        NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+        ,
+        NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+    );
+    Serial.printf("\nTASK=1:Thermo_get_data OK");
 
-    pid_parm.pid_CT = 3 * uS_TO_S_FACTOR; // 10s. uinit is micros
-    pid_parm.p = 3.58;
-    pid_parm.i = 0.65;
-    pid_parm.d = 13.5;
-    pid_parm.BT_tempfix = 0.0;
+    xTaskCreatePinnedToCore(
+        Task_PID_autotune, "PID autotune" //
+        ,
+        1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
+        ,
+        NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+        ,
+        &xTask_PID_autotune, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+    );
 
+    Serial.printf("\nTASK=2:PID autotune OK");
 
-xTaskCreatePinnedToCore(
-    Task_Thermo_get_data, "Thermo_get_data" //
-    ,
-    1024 * 4 // This stack size can be checked & adjusted by reading the Stack Highwater
-    ,
-    NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    ,
-    NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-);
-Serial.printf("\nTASK=1:Thermo_get_data OK");
+    // end of part I
 
-xTaskCreatePinnedToCore(
-    Task_PID_autotune, "PID autotune" //
-    ,
-    1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
-    ,
-    NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    ,
-    &xTask_PID_autotune, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-);
+    // partII run the PID autotune
 
-Serial.printf("\nTASK=2:PID autotune OK");
+    // INIT PID AUTOTUNE
+    // read pid data from EEPROM
 
-// end of part I
+    tuner.setTargetInputValue(PID_TUNE_SV);
+    tuner.setLoopInterval(pid_parm.pid_CT * uS_TO_S_FACTOR); //interval in uS
+    tuner.setOutputRange(map(pid_out_min, 0, 100, 0, 255), map(pid_out_max, 0, 100, 0, 255)); // 取值范围转换为（0-255）-> (76-205)
+    tuner.setZNMode(PIDAutotuner::ZNModeNoOvershoot);
 
-// partII run the PID autotune
+    Serial.printf("\nPID Auto Tune will be started in 3 seconde...\n");
+    vTaskDelay(3000);                               // 让pid关闭有足够时间执行
+    xTaskNotify(xTask_PID_autotune, 0, eIncrement); // 通知处理任务干活
 
-// INIT PID AUTOTUNE
-tuner.setTargetInputValue(PID_TUNE_SV);
-tuner.setLoopInterval(pid_parm.pid_CT);
-tuner.setOutputRange(map(pid_out_min, 0, 100, 0, 255), map(pid_out_max, 0, 100, 0, 255)); // 取值范围转换为（0-255）-> (76-205)
-tuner.setZNMode(PIDAutotuner::ZNModeNoOvershoot);
-
-Serial.printf("\nPID Auto Tune will be started in 3 seconde...\n");
-vTaskDelay(3000);                               // 让pid关闭有足够时间执行
-xTaskNotify(xTask_PID_autotune, 0, eIncrement); // 通知处理任务干活
-
-// end of Part II
+    // end of Part II
 }
 
 void loop()
@@ -155,31 +167,21 @@ void Task_Thermo_get_data(void *pvParameters)
         // Wait for the next cycle (intervel 2000ms).
         vTaskDelayUntil(&xLastWakeTime, xIntervel);
 
-        // aht.getEvent(&humidity_aht20, &temp_aht20); // populate temp and humidity objects with fresh data
-        // AMB_TEMP = temp_aht20.temperature;
-        // AMB_RH = humidity_aht20.relative_humidity;
-
-        ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
-        for (i = 0; i < 5; i++)
+        if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
         {
-            vTaskDelay(50);
-            Voltage = ADC_MCP3424.Measure();
-            bt_temp[i] = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH3
-            for (j = i + 1; j < 5; j++)
+            if (aht20.startMeasurementReady(/* crcEn = */ true))
             {
-                if (bt_temp[i] > bt_temp[j])
-                {
-                    temp_ = bt_temp[i];
-                    bt_temp[i] = bt_temp[j];
-                    bt_temp[j] = temp_;
-                }
+                AMB_TEMP = aht20.getTemperature_C();
+                AMB_RH = aht20.getHumidity_RH();
             }
+            ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
+            Voltage = ADC_MCP3424.Measure();
+            BT_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH1 3001
+
+            xSemaphoreGive(xThermoDataMutex); // end of lock mutex
         }
-        BT_TEMP = bt_temp[2]; // for bt temp more accuricy
-        Serial.println(BT_TEMP);
-        xSemaphoreGive(xThermoDataMutex); // end of lock mutex
     }
-}// function
+} // function
 
 void Task_PID_autotune(void *pvParameters)
 {
@@ -230,11 +232,33 @@ void Task_PID_autotune(void *pvParameters)
             Serial.printf("\nPID ki:%4.2f\n", pid_parm.i);
             Serial.printf("\nPID kd:%4.2f\n", pid_parm.d);
 
-            I2C_EPPROM.write(address, pid_parm);
-
+            I2C_EEPROM.put(LOCATION_SETTINGS, pid_parm);
 
             Serial.printf("\nPID parms saved ...\n");
         }
     }
     vTaskDelete(NULL);
+}
+
+// Load the current settings from EEPROM into the settings struct
+void loadUserSettings()
+{
+    // Uncomment these lines to forcibly erase the EEPROM and see how the defaults are set
+    // Serial.println("Erasing EEPROM");
+    // myMem.erase();
+
+    // Check to see if EEPROM is blank. If the first four spots are zeros then we can assume the EEPROM is blank.
+    uint32_t testRead = 0;
+    if (I2C_EEPROM.get(LOCATION_SETTINGS, testRead) == 0) // EEPROM address to read, thing to read into
+    {
+        // At power on, settings are set to defaults within the struct.
+        // So go record the struct as it currently exists so that defaults are set.
+        I2C_EEPROM.put(LOCATION_SETTINGS, pid_parm);
+        Serial.println("Default settings applied");
+    }
+    else
+    {
+        // Read current settings
+        I2C_EEPROM.get(LOCATION_SETTINGS, pid_parm);
+    }
 }
