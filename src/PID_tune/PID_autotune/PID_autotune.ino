@@ -135,7 +135,7 @@ void setup()
     // read pid data from EEPROM
 
     tuner.setTargetInputValue(PID_TUNE_SV);
-    tuner.setLoopInterval(pid_parm.pid_CT * uS_TO_S_FACTOR);
+    tuner.setLoopInterval(pid_parm.pid_CT * uS_TO_S_FACTOR); //interval in uS
     tuner.setOutputRange(map(pid_out_min, 0, 100, 0, 255), map(pid_out_max, 0, 100, 0, 255)); // 取值范围转换为（0-255）-> (76-205)
     tuner.setZNMode(PIDAutotuner::ZNModeNoOvershoot);
 

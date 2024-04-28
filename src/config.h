@@ -52,6 +52,8 @@ const int BUFFER_SIZE = 16;
 #define RNOMINAL 1000
 #define ADC_BIT 18
 
+// EEPROM address
+#define LOCATION_SETTINGS 0
 //
 typedef struct eeprom_settings
 {
