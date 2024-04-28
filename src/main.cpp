@@ -11,7 +11,6 @@
 String local_IP;
 ExternalEEPROM I2C_EEPROM;
 
-
 char ap_name[30];
 uint8_t macAddr[6];
 extern double BT_TEMP;
@@ -49,6 +48,7 @@ void setup()
     // Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
     aht20.begin();
     ADC_MCP3424.NewConversion();
+    I2C_EEPROM.setMemoryType(64);
     I2C_EEPROM.begin();
     I2C_EEPROM.get(LOCATION_SETTINGS, pid_parm);
 

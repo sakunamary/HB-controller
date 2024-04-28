@@ -72,7 +72,7 @@ void setup()
     Serial.begin(BAUDRATE);
     aht20.begin();
     ADC_MCP3424.NewConversion();
-    I2C_EEPROM.setMemoryType(32);
+    I2C_EEPROM.setMemoryType(64);
 
     //  Init pwm output
     pwm_heat.pause();
