@@ -1,5 +1,4 @@
-nozols/AruinoI2CEEPROM@^1.0.0
-powerbroker2/ArduPID@^0.2.1
 emelianov/modbus-esp8266@^4.1.0
+powerbroker2/ArduPID@^0.2.1
 adafruit/Adafruit AHTX0@^2.0.5
 dlloydev/ESP32 ESP32S2 AnalogWrite@^5.0.2
