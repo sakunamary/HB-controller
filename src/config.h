@@ -3,10 +3,9 @@
 #define __CONFIG_H__
 
 #define VERSION "1.0.5"
- //#define DEBUG_MODE
+// #define DEBUG_MODE
 //  uncomment to make work for HB M6SE ,default is work for HB M2SE
- #define MODEL_M6S
-
+#define MODEL_M6S
 
 // pwm setting
 #define PWM_FREQ 10000
@@ -56,11 +55,14 @@ const int BUFFER_SIZE = 16;
 //
 typedef struct eeprom_settings
 {
-    long pid_CT;
+    int pid_CT;
     double p;
     double i;
     double d;
     double BT_tempfix;
+    double ET_tempfix;
+    double inlet_tempfix;
+    double EX_tempfix;
 } pid_setting_t;
 
 // publc funciton
@@ -102,7 +104,6 @@ uint8_t make_frame_package(uint8_t data_array[BUFFER_SIZE], bool cmd_inbond, int
     }
     return data_array[BUFFER_SIZE];
 }
-
 
 uint8_t make_frame_data(uint8_t data_array[BUFFER_SIZE], int cmd_type, uint16_t in_val, int uBit)
 // pagkage the data frame.cmd_type:1/data_frame;2/run_status;
@@ -169,10 +170,9 @@ QueueHandle_t queueCMD = xQueueCreate(15, sizeof(uint8_t[BUFFER_SIZE]));        
 
 // 温度为小端模式   dec 2222  hex AE 08
 
-
 // pid
 
-// 20pa  CT:3s SV:180  60 -5 
+// 20pa  CT:3s SV:180  60 -5
 // kp 12.95
 // ki 1.05
 // kd 105.4
@@ -181,11 +181,11 @@ QueueHandle_t queueCMD = xQueueCreate(15, sizeof(uint8_t[BUFFER_SIZE]));        
 // ki 1.42
 // kd 121.33
 
-//kp 15.59
-//ki 1.36
-//kd 120.24
+// kp 15.59
+// ki 1.36
+// kd 120.24
 
-//20 pa CT 3s SV 180  60-0
-//p 11.52
-//i 0.98
-//d 89.74
+// 20 pa CT 3s SV 180  60-0
+// p 11.52
+// i 0.98
+// d 89.74

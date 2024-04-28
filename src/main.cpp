@@ -39,11 +39,11 @@ void setup()
     Serial.begin(BAUDRATE); // for MODBUS TCP debug
 
     // Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
-
     aht20.begin();
     ADC_MCP3424.NewConversion();
+    I2C_EEPROM.begin()；
 #if defined(DEBUG_MODE)
-    Serial.printf("\nSerial Started");
+        Serial.printf("\nSerial Started");
 #endif
 
     // 初始化网络服务

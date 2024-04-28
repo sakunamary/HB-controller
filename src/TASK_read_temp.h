@@ -5,7 +5,6 @@
 #include "config.h"
 #include <Wire.h>
 #include <MCP3424.h>
-
 #include "DFRobot_AHT20.h"
 #include "TypeK.h"
 #include <WiFi.h>
@@ -67,18 +66,19 @@ void Task_Thermo_get_data(void *pvParameters)
             }
 
             vTaskDelay(200);
-            ADC_MCP3424.Configuration(2, ADC_BIT, 1, 8);            // MCP3424 is configured to channel i with 18 bits resolution, continous mode and gain defined to 8
+            ADC_MCP3424.Configuration(2, ADC_BIT, 1, 2);            // MCP3424 is configured to channel i with 18 bits resolution, continous mode and gain defined to 8
             Voltage = ADC_MCP3424.Measure();                        // Measure is stocked in array Voltage, note that the library will wait for a completed conversion that takes around 200 ms@18bits
-            EX_TEMP = temp_K_cal.Temp_C(Voltage * 0.001, AMB_TEMP); // CH2
+            EX_TEMP = temp_K_cal.Temp_C(Voltage * 0.001, AMB_TEMP); // CH2 3004
 
             vTaskDelay(200);
             ADC_MCP3424.Configuration(1, ADC_BIT, 1, 1);
             Voltage = ADC_MCP3424.Measure();
-            INLET_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH1
+            INLET_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH1 3003
             vTaskDelay(200);
             ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
             Voltage = ADC_MCP3424.Measure();
-            BT_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH1
+            BT_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH1 3001 
+
                                                                                                                    // ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
                                                                                                                    // for (i = 0; i < 5; i++)
                                                                                                                    // {
@@ -101,7 +101,7 @@ void Task_Thermo_get_data(void *pvParameters)
             vTaskDelay(200);
             ADC_MCP3424.Configuration(4, ADC_BIT, 1, 1);
             Voltage = ADC_MCP3424.Measure();
-            ET_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH4
+            ET_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH4 3002
 #endif
             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
         }
@@ -117,7 +117,6 @@ void Task_Thermo_get_data(void *pvParameters)
 #if defined(MODEL_M6S)
         mb.Hreg(ET_HREG, int(round(ET_TEMP * 10))); // 初始化赋值
                                                     //         make_frame_data(TEMP_DATA_Buffer, 1, int(round(ET_TEMP * 10)), 9);
-
 #endif
         make_frame_package(TEMP_DATA_Buffer, true, 1);
         make_frame_data(TEMP_DATA_Buffer, 1, int(round(BT_TEMP * 10)), 3);
