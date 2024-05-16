@@ -77,25 +77,25 @@ void Task_Thermo_get_data(void *pvParameters)
             vTaskDelay(200);
             ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
             Voltage = ADC_MCP3424.Measure();
-            BT_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH1 3001 
+            BT_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH1 3001
 
-                                                                                                                   // ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
-                                                                                                                   // for (i = 0; i < 5; i++)
-                                                                                                                   // {
-                                                                                                                   //     vTaskDelay(50);
-                                                                                                                   //     Voltage = ADC_MCP3424.Measure();
-                                                                                                                   //     bt_temp[i] = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH3
-                                                                                                                   //     for (j = i + 1; j < 5; j++)
-                                                                                                                   //     {
-                                                                                                                   //         if (bt_temp[i] > bt_temp[j])
-                                                                                                                   //         {
-                                                                                                                   //             temp_ = bt_temp[i];
-                                                                                                                   //             bt_temp[i] = bt_temp[j];
-                                                                                                                   //             bt_temp[j] = temp_;
-                                                                                                                   //         }
-                                                                                                                   //     }
-                                                                                                                   // }
-                                                                                                                   // BT_TEMP = bt_temp[2]; // for bt temp more accuricy
+            // ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
+            // for (i = 0; i < 5; i++)
+            // {
+            //     vTaskDelay(50);
+            //     Voltage = ADC_MCP3424.Measure();
+            //     bt_temp[i] = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH3
+            //     for (j = i + 1; j < 5; j++)
+            //     {
+            //         if (bt_temp[i] > bt_temp[j])
+            //         {
+            //             temp_ = bt_temp[i];
+            //             bt_temp[i] = bt_temp[j];
+            //             bt_temp[j] = temp_;
+            //         }
+            //     }
+            // }
+            // BT_TEMP = bt_temp[2]; // for bt temp more accuricy
 
 #if defined(MODEL_M6S)
             vTaskDelay(200);
@@ -116,7 +116,7 @@ void Task_Thermo_get_data(void *pvParameters)
 // making the HMI frame
 #if defined(MODEL_M6S)
         mb.Hreg(ET_HREG, int(round(ET_TEMP * 10))); // 初始化赋值
-                                                    //         make_frame_data(TEMP_DATA_Buffer, 1, int(round(ET_TEMP * 10)), 9);
+        make_frame_data(TEMP_DATA_Buffer, 1, int(round(ET_TEMP * 10)), 9);
 #endif
         make_frame_package(TEMP_DATA_Buffer, true, 1);
         make_frame_data(TEMP_DATA_Buffer, 1, int(round(BT_TEMP * 10)), 3);
@@ -124,7 +124,7 @@ void Task_Thermo_get_data(void *pvParameters)
         make_frame_data(TEMP_DATA_Buffer, 1, int(round(EX_TEMP * 10)), 7);
         xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 3);
         // // send notify to TASK_data_to_HMI
-        // xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
+        xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
     }
 
 } // function

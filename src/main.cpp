@@ -6,7 +6,7 @@
 #include "TASK_read_temp.h"
 #include "TASK_modbus_control.h"
 
-// #include "TASK_HMI_Serial.h"
+#include "TASK_HMI_Serial.h"
 
 String local_IP;
 ExternalEEPROM I2C_EEPROM;
@@ -45,7 +45,7 @@ void setup()
 #if defined(DEBUG_MODE)
     Serial.printf("\nSerial Started");
 #endif
-    // Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
+    Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
     aht20.begin();
     ADC_MCP3424.NewConversion();
     I2C_EEPROM.setMemoryType(64);
@@ -120,18 +120,18 @@ void setup()
     Serial.printf("\nTASK=2:modbus_control OK");
 #endif
 
-    //     xTaskCreatePinnedToCore(
-    //         TASK_data_to_HMI, "data_to_HMI" //
-    //         ,
-    //         1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
-    //         ,
-    //         NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    //         ,
-    //         &xTASK_data_to_HMI, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    //     );
-    // #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    //     Serial.printf("\nTASK=3:data_to_HMI OK");
-    // #endif
+    xTaskCreatePinnedToCore(
+        TASK_data_to_HMI, "data_to_HMI" //
+        ,
+        1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
+        ,
+        NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+        ,
+        &xTASK_data_to_HMI, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+    );
+#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+    Serial.printf("\nTASK=3:data_to_HMI OK");
+#endif
 
     //     xTaskCreatePinnedToCore(
     //         TASK_CMD_FROM_HMI, "CMD_FROM_HMI" //
