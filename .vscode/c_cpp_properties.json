@@ -215,7 +215,6 @@
                 "/Users/work/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/qio_qspi/include",
                 "/Users/work/.platformio/packages/framework-arduinoespressif32/cores/esp32",
                 "/Users/work/.platformio/packages/framework-arduinoespressif32/variants/dfrobot_firebeetle2_esp32s3",
-                "/Users/work/Documents/Github/HB-controller/lib/ArduinoSerialCommand",
                 "/Users/work/Documents/Github/HB-controller/.pio/libdeps/esp32-s3/LiquidCrystal",
                 "/Users/work/.platformio/packages/framework-arduinoespressif32/libraries/ArduinoOTA/src",
                 "/Users/work/.platformio/packages/framework-arduinoespressif32/libraries/AsyncUDP/src",
@@ -458,7 +457,6 @@
                     "/Users/work/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/qio_qspi/include",
                     "/Users/work/.platformio/packages/framework-arduinoespressif32/cores/esp32",
                     "/Users/work/.platformio/packages/framework-arduinoespressif32/variants/dfrobot_firebeetle2_esp32s3",
-                    "/Users/work/Documents/Github/HB-controller/lib/ArduinoSerialCommand",
                     "/Users/work/Documents/Github/HB-controller/.pio/libdeps/esp32-s3/LiquidCrystal",
                     "/Users/work/.platformio/packages/framework-arduinoespressif32/libraries/ArduinoOTA/src",
                     "/Users/work/.platformio/packages/framework-arduinoespressif32/libraries/AsyncUDP/src",
@@ -493,7 +491,7 @@
                 ]
             },
             "defines": [
-                "PLATFORMIO=60114",
+                "PLATFORMIO=60115",
                 "ARDUINO_ESP32S3_DEV",
                 "ARDUINO_USB_MODE=1",
                 "ARDUINO_RUNNING_CORE=1",
