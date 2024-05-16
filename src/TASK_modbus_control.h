@@ -64,7 +64,7 @@ void Task_modbus_control(void *pvParameters)
                 // make_frame_data(CMD_DATA_Buffer, 2, last_PWR, 3);
                 // make_frame_end(CMD_DATA_Buffer, 2); // 帧微
                 // xQueueSendToFront(queue_data_to_HMI, &CMD_DATA_Buffer, xIntervel);
-                pwm_heat.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
+                pwm_heat.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 250, 1000), frequency, resolution); // 输出新火力pwr到SSRÍ
                 xSemaphoreGive(xThermoDataMutex);                                                            // end of lock mutex
                 // xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
             }
@@ -136,7 +136,7 @@ void Task_modbus_control(void *pvParameters)
                     }
                 }
             }
-            pwm_heat.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
+            pwm_heat.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 250, 1000), frequency, resolution); // 输出新火力pwr到SSRÍ
         }
         vTaskDelay(20);
         /////////////////////////////////////////////////////////////////////////////
