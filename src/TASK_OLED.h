@@ -29,7 +29,7 @@ void Task_OLED(void *pvParameters)
     /* Variable Definition */
     (void)pvParameters;
     TickType_t xLastWakeTime;
-    const TickType_t xIntervel = 1000  / portTICK_PERIOD_MS;
+    const TickType_t xIntervel = 1000 / portTICK_PERIOD_MS;
     xLastWakeTime = xTaskGetTickCount();
 
     String ver = VERSION;
@@ -49,15 +49,19 @@ void Task_OLED(void *pvParameters)
     {
         // Wait for the next cycle
         vTaskDelayUntil(&xLastWakeTime, xIntervel);
+        display.clear();
+        display.setFont(ArialMT_Plain_10);
 
         if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // Mutex to make the data more clean
         {
-            display.drawStringf(2 + 16, 0 + 2, buffer, "BT:%4.2f", BT_TEMP);
-            display.drawStringf(2 + 16, 18 + 2, buffer, "IN:%4.2f", INLET_TEMP);
-            display.drawStringf(2 + 16, 36 + 2, buffer, "EX:%4.2f", EX_TEMP);
-            display.drawStringf(2 + 16, 54 + 2, buffer, "ET:%4.2f", ET_TEMP);
+            display.drawStringf(2 + 16, 0 + 2, buffer,  "BT:  %4.2f", BT_TEMP);
+            display.drawStringf(2 + 16, 16 + 2, buffer, "IN:  %4.2f", INLET_TEMP);
+            display.drawStringf(2 + 16, 32 + 2, buffer, "EX:  %4.2f", EX_TEMP);
+            display.drawStringf(2 + 16, 48 + 2, buffer, "ET:  %4.2f", ET_TEMP);
+            display.display();
             xSemaphoreGive(xThermoDataMutex);
         }
+
     }
 }
 

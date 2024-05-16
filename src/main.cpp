@@ -39,7 +39,8 @@ void setup()
 
     Serial.begin(BAUDRATE); // for MODBUS TCP debug
 
-    // Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
+    Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
+
 
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nSerial Started");
