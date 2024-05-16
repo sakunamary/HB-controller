@@ -99,17 +99,17 @@ void Task_Thermo_get_data(void *pvParameters)
 // making the HMI frame
 #if defined(MODEL_M6S)
         mb.Hreg(ET_HREG, int(round(ET_TEMP * 10))); // 初始化赋值
-//         make_frame_data(TEMP_DATA_Buffer, 1, int(round(ET_TEMP * 10)), 9);
+       make_frame_data(TEMP_DATA_Buffer, 1, int(round(ET_TEMP * 10)), 9);
 // #else
 //         make_frame_data(TEMP_DATA_Buffer, 1, 0, 9);
 #endif
-        // make_frame_package(TEMP_DATA_Buffer, true, 1);
-        // make_frame_data(TEMP_DATA_Buffer, 1, int(round(BT_TEMP * 10)), 3);
-        // make_frame_data(TEMP_DATA_Buffer, 1, int(round(INLET_TEMP * 10)), 5);
-        // make_frame_data(TEMP_DATA_Buffer, 1, int(round(EX_TEMP * 10)), 7);
-        // xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 3);
-        // // send notify to TASK_data_to_HMI
-        // xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
+        make_frame_package(TEMP_DATA_Buffer, true, 1);
+        make_frame_data(TEMP_DATA_Buffer, 1, int(round(BT_TEMP * 10)), 3);
+        make_frame_data(TEMP_DATA_Buffer, 1, int(round(INLET_TEMP * 10)), 5);
+        make_frame_data(TEMP_DATA_Buffer, 1, int(round(EX_TEMP * 10)), 7);
+        xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 3);
+        // send notify to TASK_data_to_HMI
+        xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
     }
 
 } // function
