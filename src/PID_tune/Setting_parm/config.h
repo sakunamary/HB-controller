@@ -45,7 +45,7 @@
 const int BUFFER_SIZE = 16;
 
 // parametsrs of MAX31865
-#define RREF 430.0
+#define RREF 100.0
 #define RNOMINAL 100.0
 //
 typedef struct eeprom_settings

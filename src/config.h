@@ -50,7 +50,7 @@ const int BUFFER_SIZE = 16;
 // parametsrs of MAX31865
 #define RREF 100
 #define RNOMINAL 1000
-#define ADC_BIT 18
+#define ADC_BIT 16
 
 // EEPROM address
 #define LOCATION_SETTINGS 0
