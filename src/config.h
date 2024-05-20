@@ -77,19 +77,18 @@ uint8_t make_frame_package(uint8_t data_array[BUFFER_SIZE], bool cmd_inbond, int
     {
     case 1:                    // data_frame
         data_array[2] = 0x01;  // data type
-        data_array[11] = 0x00; // frame end
-        data_array[12] = 0x00; // frame end
+        data_array[11] = 0xff; // frame end
+        data_array[12] = 0xff; // frame end
         data_array[13] = 0xff; // frame end
-        data_array[14] = 0xff; // frame end
-        data_array[15] = 0xff; // frame end
+
 
         break;
     case 2:                    // run_status
         data_array[2] = 0x02;  // data type
-        data_array[12] = 0x00; // frame end
+        data_array[11] = 0xff; // frame end
+        data_array[12] = 0xff; // frame end
         data_array[13] = 0xff; // frame end
-        data_array[14] = 0xff; // frame end
-        data_array[15] = 0xff; // frame end
+
         break;
     default:
         break;
@@ -105,7 +104,7 @@ uint8_t make_frame_data(uint8_t data_array[BUFFER_SIZE], int cmd_type, uint16_t 
     switch (cmd_type)
     {
     case 1:
-        if (uBit > 2 && uBit < 13)
+        if (uBit > 2 && uBit < 9)
         {
             data_array[uBit] = low;      // frame end
             data_array[uBit + 1] = high; // frame end
