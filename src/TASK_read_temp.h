@@ -76,7 +76,7 @@ void Task_Thermo_get_data(void *pvParameters)
                     }
                 }
             }
-            BT_TEMP = bt_temp[2]; // for bt temp more accuricy
+            BT_TEMP = bt_temp[2] + pid_parm.BT_tempfix; // for bt temp more accuricy
 
 #if defined(MODEL_M6S)
 
@@ -89,7 +89,7 @@ void Task_Thermo_get_data(void *pvParameters)
 #if defined(DEBUG_MODE)
         Serial.printf("CH3 bt:%d\n", int(round(BT_TEMP * 10)));
         Serial.printf("CH1 inlet:%d\n", int(round(INLET_TEMP * 10)));
-        Serial.printf("CH2 ex:%d\n", int(round(BT_TEMP * 10)));
+        Serial.printf("CH2 ex:%d\n", int(round(EX_TEMP * 10)));
         Serial.println();
 #endif
         // update  Hreg data
@@ -115,13 +115,14 @@ void Task_Thermo_get_data(void *pvParameters)
 } // function
 
 #endif
-// HB --> HMI的数据帧 FrameLenght = 14
+// HB --> HMI的数据帧 FrameLenght = 16
 // 帧头: 69 FF
 // 类型: 01温度数据
 // 温度1: 00 00 // uint16
 // 温度2: 00 00 // uint16
 // 温度3: 00 00 // uint16
 // 温度4: 00 00 // uint16
+// NULL: 00 00 //uint16
 // 帧尾:FF FF FF
 
 
