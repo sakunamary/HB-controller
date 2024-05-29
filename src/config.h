@@ -137,7 +137,7 @@ QueueHandle_t queueCMD = xQueueCreate(15, sizeof(uint8_t[BUFFER_SIZE]));        
 
 #endif
 // HB --> HMI的数据帧 FrameLenght = 16
-// 帧头: 69 FF
+// 帧头: 67 FF
 // 类型: 01温度数据
 // 温度1: 00 00 // uint16
 // 温度2: 00 00 // uint16
