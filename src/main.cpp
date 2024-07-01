@@ -51,7 +51,7 @@ void setup()
     aht20.begin();
     ADC_MCP3424.NewConversion();
     I2C_EEPROM.setMemoryType(64);
-
+    I2C_EEPROM.begin();
     I2C_EEPROM.get(LOCATION_SETTINGS, pid_parm); // 从eeprom获取数据
 #if defined(DEBUG_MODE)
     // read pid data from EEPROM
