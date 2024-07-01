@@ -125,11 +125,11 @@ uint8_t make_frame_data(uint8_t data_array[BUFFER_SIZE], int cmd_type, uint16_t 
     return data_array[BUFFER_SIZE];
 }
 
-static TaskHandle_t xTASK_data_to_HMI = NULL;
-static TaskHandle_t xTASK_CMD_HMI = NULL;
-static TaskHandle_t xTASK_HMI_CMD_handle = NULL;
-static TaskHandle_t xTask_PID_autotune = NULL;
-static TaskHandle_t xTask_modbus_control = NULL;
+// static TaskHandle_t xTASK_data_to_HMI = NULL;
+// static TaskHandle_t xTASK_CMD_HMI = NULL;
+// static TaskHandle_t xTASK_HMI_CMD_handle = NULL;
+// static TaskHandle_t xTask_PID_autotune = NULL;
+// static TaskHandle_t xTask_modbus_control = NULL;
 
 SemaphoreHandle_t xThermoDataMutex = NULL;
 SemaphoreHandle_t xSerialReadBufferMutex = NULL;
