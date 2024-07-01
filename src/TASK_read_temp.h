@@ -19,7 +19,9 @@ MCP3424 ADC_MCP3424(MCP3424_address); // Declaration of MCP3424 A2=0 A1=1 A0=0
 
 DFRobot_AHT20 aht;
 //Adafruit_AHTX0 aht;
-sensors_event_t humidity_aht20, temp_aht20;
+//sensors_event_t humidity_aht20, temp_aht20;
+
+
 TypeK temp_K_cal;
 
 double BT_TEMP;
@@ -63,9 +65,14 @@ void Task_Thermo_get_data(void *pvParameters)
 
         if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
         {
-            aht.getEvent(&humidity_aht20, &temp_aht20); // populate temp and humidity objects with fresh data
-            AMB_TEMP = temp_aht20.temperature;
-            AMB_RH = humidity_aht20.relative_humidity;
+            
+            aht.startMeasurementReady(/* crcEn = */true)){
+            AMB_TEMP=aht20.getTemperature_C();
+            AMB_RH=aht20.getHumidity_RH();
+            }
+            // aht.getEvent(&humidity_aht20, &temp_aht20); // populate temp and humidity objects with fresh data
+            // AMB_TEMP = temp_aht20.temperature;
+            // AMB_RH = humidity_aht20.relative_humidity;
             vTaskDelay(50);
 
             ADC_MCP3424.Configuration(2, ADC_BIT, 1, 8);                          // MCP3424 is configured to channel i with 18 bits resolution, continous mode and gain defined to 8
@@ -128,3 +135,5 @@ void Task_Thermo_get_data(void *pvParameters)
 } // function
 
 #endif
+
+   
