@@ -6,7 +6,7 @@
 #include <Wire.h>
 #include <MCP3424.h>
 #include "TypeK.h"
-#include <Adafruit_AHTX0.h>
+#include "DFRobot_AHT20.h"
 
 #include <WiFi.h>
 
@@ -16,7 +16,9 @@ uint8_t MCP3424_address = 0x68;
 long Voltage; // Array used to store results
 
 MCP3424 ADC_MCP3424(MCP3424_address); // Declaration of MCP3424 A2=0 A1=1 A0=0
-Adafruit_AHTX0 aht;
+
+DFRobot_AHT20 aht;
+//Adafruit_AHTX0 aht;
 sensors_event_t humidity_aht20, temp_aht20;
 TypeK temp_K_cal;
 
