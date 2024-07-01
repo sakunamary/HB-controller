@@ -1,10 +1,13 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include "config.h"
+#include "SparkFun_External_EEPROM.h" // Click here to get the library: http://librarymanager/All#SparkFun_External_EEPROM
 
 #include "TASK_read_temp.h"
 #include "TASK_modbus_control.h"
-#include "SparkFun_External_EEPROM.h" // Click here to get the library: http://librarymanager/All#SparkFun_External_EEPROM
+#include "TASK_HMI_Serial.h"
+
+
 
 String local_IP;
 ExternalEEPROM I2C_EEPROM;
@@ -118,6 +121,20 @@ void setup()
     );
 #if defined(DEBUG_MODE) 
     Serial.printf("\nTASK=2:modbus_control OK");
+#endif
+
+
+    xTaskCreate(
+        TASK_data_to_HMI, "TASK_data_to_HMI" //
+        ,
+        1024 * 10 // This stack size can be checked & adjusted by reading the Stack Highwater
+        ,
+        NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+        ,
+        &xTask_modbus_control // Running Core decided by FreeRTOS,let core0 run wifi and BT
+    );
+#if defined(DEBUG_MODE) 
+    Serial.printf("\nTASK=3:TASK_data_to_HMI OK");
 #endif
 
     // INIT MODBUS
