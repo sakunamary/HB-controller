@@ -18,8 +18,6 @@ long Voltage; // Array used to store results
 MCP3424 ADC_MCP3424(MCP3424_address); // Declaration of MCP3424 A2=0 A1=1 A0=0
 
 DFRobot_AHT20 aht20;
-// Adafruit_AHTX0 aht;
-// sensors_event_t humidity_aht20, temp_aht20;
 
 TypeK temp_K_cal;
 
@@ -52,6 +50,7 @@ void Task_Thermo_get_data(void *pvParameters)
     (void)pvParameters;
     TickType_t xLastWakeTime;
     BaseType_t xResult;
+    uint8_t TEMP_DATA_Buffer[BUFFER_SIZE];
     const TickType_t xIntervel = 2000 / portTICK_PERIOD_MS;
     /* Task Setup and Initialize */
     // Initial the xLastWakeTime variable with the current time.
@@ -123,6 +122,21 @@ void Task_Thermo_get_data(void *pvParameters)
 #if defined(MODEL_M6S)
         mb.Hreg(ET_HREG, int(round(ET_TEMP * 10))); // 初始化赋值
 #endif
+
+// making the HMI frame
+#if defined(MODEL_M6S)
+        mb.Hreg(ET_HREG, int(round(ET_TEMP * 10))); // 初始化赋值
+        make_frame_data(TEMP_DATA_Buffer, 1, int(round(ET_TEMP * 10)), 9);
+// #else
+//         make_frame_data(TEMP_DATA_Buffer, 1, 0, 9);
+#endif
+        make_frame_package(TEMP_DATA_Buffer, true, 1);
+        make_frame_data(TEMP_DATA_Buffer, 1, int(round(BT_TEMP * 10)), 3);
+        make_frame_data(TEMP_DATA_Buffer, 1, int(round(INLET_TEMP * 10)), 5);
+        make_frame_data(TEMP_DATA_Buffer, 1, int(round(EX_TEMP * 10)), 7);
+        xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 3);
+        // send notify to TASK_data_to_HMI
+        xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
     }
 
 } // function

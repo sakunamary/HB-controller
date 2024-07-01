@@ -7,8 +7,6 @@
 #include "TASK_modbus_control.h"
 #include "TASK_HMI_Serial.h"
 
-
-
 String local_IP;
 ExternalEEPROM I2C_EEPROM;
 
@@ -43,7 +41,7 @@ void setup()
 
     Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
 
-#if defined(DEBUG_MODE) 
+#if defined(DEBUG_MODE)
     Serial.printf("\nSerial Started");
     Serial.println(VERSION);
 
@@ -54,9 +52,9 @@ void setup()
     ADC_MCP3424.NewConversion();
     I2C_EEPROM.setMemoryType(64);
 
-    I2C_EEPROM.get(LOCATION_SETTINGS, pid_parm);//从eeprom获取数据
-#if defined(DEBUG_MODE) 
-   // read pid data from EEPROM
+    I2C_EEPROM.get(LOCATION_SETTINGS, pid_parm); // 从eeprom获取数据
+#if defined(DEBUG_MODE)
+    // read pid data from EEPROM
 
     Serial.printf("\nEEPROM value check ...\n");
     Serial.printf("\npid_CT:%ld\n", pid_parm.pid_CT);
@@ -66,7 +64,6 @@ void setup()
     Serial.printf("\nBT fix:%4.2f\n", pid_parm.BT_tempfix);
 #endif
 
-
     // 初始化网络服务
     WiFi.macAddress(macAddr);
     // Serial_debug.println("WiFi.mode(AP):");
@@ -74,13 +71,13 @@ void setup()
     sprintf(ap_name, "HB-%02X%02X%02X", macAddr[3], macAddr[4], macAddr[5]);
     if (WiFi.softAP(ap_name, "12345678"))
     { // defualt IP address :192.168.4.1 password min 8 digis
-#if defined(DEBUG_MODE) 
+#if defined(DEBUG_MODE)
         Serial.printf("\nWiFi AP: %s Started\n", ap_name);
 #endif
     }
     else
     {
-#if defined(DEBUG_MODE) 
+#if defined(DEBUG_MODE)
         Serial.printf("\nWiFi AP NOT OK YET...\n");
 #endif
         vTaskDelay(500);
@@ -90,7 +87,7 @@ void setup()
     pwm_heat.pause();
     pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution);
     pwm_heat.resume();
-#if defined(DEBUG_MODE) 
+#if defined(DEBUG_MODE)
     pwm_heat.printDebug();
     Serial.println("\nPWM started");
 #endif
@@ -106,7 +103,7 @@ void setup()
         ,
         NULL // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
-#if defined(DEBUG_MODE) 
+#if defined(DEBUG_MODE)
     Serial.printf("\nTASK=1:Thermo_get_data OK");
 #endif
 
@@ -119,29 +116,28 @@ void setup()
         ,
         &xTask_modbus_control // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
-#if defined(DEBUG_MODE) 
+#if defined(DEBUG_MODE)
     Serial.printf("\nTASK=2:modbus_control OK");
 #endif
 
-
     xTaskCreate(
-        TASK_data_to_HMI, "TASK_data_to_HMI" //
+        TASK_data_to_HMI, "data_to_HMI" //
         ,
-        1024 * 10 // This stack size can be checked & adjusted by reading the Stack Highwater
+        1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
         ,
         NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
         ,
-        &xTask_modbus_control // Running Core decided by FreeRTOS,let core0 run wifi and BT
+        &xTASK_data_to_HMI // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
-#if defined(DEBUG_MODE) 
-    Serial.printf("\nTASK=3:TASK_data_to_HMI OK");
+#if defined(DEBUG_MODE)
+    Serial.printf("\nTASK=3:data_to_HMI OK");
 #endif
 
     // INIT MODBUS
 
     mb.server(502); // Start Modbus IP //default port :502
 
-#if defined(DEBUG_MODE) 
+#if defined(DEBUG_MODE)
     Serial.printf("\nStart Modbus-TCP  service OK\n");
 #endif
     // Add SENSOR_IREG register - Use addIreg() for analog Inputs
