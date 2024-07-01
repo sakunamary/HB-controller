@@ -18,10 +18,10 @@ pid_setting_t pid_parm = {
     .p = 3.023,
     .i = 0.12,
     .d = 33.0,
-    .BT_tempfix = 0.0,
-    .ET_tempfix = 0.0,
-    .inlet_tempfix = 0.0,
-    .EX_tempfix = 0.0};
+    .BT_tempfix = 1.0,
+    .ET_tempfix = 1.5,
+    .inlet_tempfix = 2.5,
+    .EX_tempfix = 1.34};
 
 ExternalEEPROM I2C_EEPROM;
 

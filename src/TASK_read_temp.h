@@ -66,33 +66,26 @@ void Task_Thermo_get_data(void *pvParameters)
         {
 
             if (aht20.startMeasurementReady(/* crcEn = */ true))
-                {
-                    AMB_TEMP = aht20.getTemperature_C();
-                    AMB_RH = aht20.getHumidity_RH();
-                }
-            // aht.getEvent(&humidity_aht20, &temp_aht20); // populate temp and humidity objects with fresh data
-            // AMB_TEMP = temp_aht20.temperature;
-            // AMB_RH = humidity_aht20.relative_humidity;
+            {
+                AMB_TEMP = aht20.getTemperature_C();
+                AMB_RH = aht20.getHumidity_RH();
+            }
             vTaskDelay(50);
 
-            ADC_MCP3424.Configuration(2, ADC_BIT, 1, 8);                            // MCP3424 is configured to channel i with 18 bits resolution, continous mode and gain defined to 8
-            Voltage = ADC_MCP3424.Measure();                                        // Measure is stocked in array Voltage, note that the library will wait for a completed conversion that takes around 200 ms@18bits
-            EX_TEMP = temp_K_cal.Temp_C(Voltage * 0.001, aht20.getTemperature_C()); // CH2
+            ADC_MCP3424.Configuration(2, ADC_BIT, 1, 8);                                                  // MCP3424 is configured to channel i with 18 bits resolution, continous mode and gain defined to 8
+            Voltage = ADC_MCP3424.Measure();                                                              // Measure is stocked in array Voltage, note that the library will wait for a completed conversion that takes around 200 ms@18bits
+            EX_TEMP = temp_K_cal.Temp_C(Voltage * 0.001, aht20.getTemperature_C()) + pid_parm.EX_tempfix; // CH2
 
             vTaskDelay(50);
             ADC_MCP3424.Configuration(1, ADC_BIT, 1, 1);
             Voltage = ADC_MCP3424.Measure();
-            INLET_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH1
-            // vTaskDelay(50);
-            // ADC_MPC3424.Configuration(3, ADC_BIT, 1, 1);
-            // Voltage = MCP.Measure();
-            // BT_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH1
+            INLET_TEMP = pid_parm.inlet_tempfix + (((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083)); // CH1
             ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
             for (i = 0; i < 5; i++)
             {
                 vTaskDelay(50);
                 Voltage = ADC_MCP3424.Measure();
-                bt_temp[i] = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH3
+                bt_temp[i] = pid_parm.BT_tempfix + (((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083)); // CH3
                 for (j = i + 1; j < 5; j++)
                 {
                     if (bt_temp[i] > bt_temp[j])
@@ -108,7 +101,7 @@ void Task_Thermo_get_data(void *pvParameters)
 #if defined(MODEL_M6S)
             ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
             Voltage = ADC_MCP3424.Measure();
-            ET_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH4
+            ET_TEMP = pid_parm.ET_tempfix + (((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083)); // CH4
 #endif
             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
         }

@@ -6,8 +6,6 @@
 #include "TASK_modbus_control.h"
 #include "SparkFun_External_EEPROM.h" // Click here to get the library: http://librarymanager/All#SparkFun_External_EEPROM
 
-
-
 String local_IP;
 ExternalEEPROM I2C_EEPROM;
 
@@ -16,7 +14,7 @@ uint8_t macAddr[6];
 extern double BT_TEMP;
 
 pid_setting_t pid_parm = {
-    .pid_CT = 3* uS_TO_S_FACTOR,
+    .pid_CT = 3 * uS_TO_S_FACTOR,
     .p = 25.41,
     .i = 1.81,
     .d = 99.74,
@@ -24,7 +22,6 @@ pid_setting_t pid_parm = {
     .ET_tempfix = 0.0,
     .inlet_tempfix = 0.0,
     .EX_tempfix = 0.0};
-
 
 void setup()
 {
@@ -43,14 +40,29 @@ void setup()
 
     Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
 
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+#if defined(DEBUG_MODE) 
     Serial.printf("\nSerial Started");
+    Serial.println(VERSION);
+
 #endif
 
     // INIT SENSOR
     aht20.begin();
     ADC_MCP3424.NewConversion();
-    I2C_EEPROM.setMemoryType(32);
+    I2C_EEPROM.setMemoryType(64);
+
+    I2C_EEPROM.get(LOCATION_SETTINGS, pid_parm);//从eeprom获取数据
+#if defined(DEBUG_MODE) 
+   // read pid data from EEPROM
+
+    Serial.printf("\nEEPROM value check ...\n");
+    Serial.printf("\npid_CT:%ld\n", pid_parm.pid_CT);
+    Serial.printf("\nPID kp:%4.2f\n", pid_parm.p);
+    Serial.printf("\nPID ki:%4.2f\n", pid_parm.i);
+    Serial.printf("\nPID kd:%4.2f\n", pid_parm.d);
+    Serial.printf("\nBT fix:%4.2f\n", pid_parm.BT_tempfix);
+#endif
+
 
     // 初始化网络服务
     WiFi.macAddress(macAddr);
@@ -59,13 +71,13 @@ void setup()
     sprintf(ap_name, "HB-%02X%02X%02X", macAddr[3], macAddr[4], macAddr[5]);
     if (WiFi.softAP(ap_name, "12345678"))
     { // defualt IP address :192.168.4.1 password min 8 digis
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+#if defined(DEBUG_MODE) 
         Serial.printf("\nWiFi AP: %s Started\n", ap_name);
 #endif
     }
     else
     {
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+#if defined(DEBUG_MODE) 
         Serial.printf("\nWiFi AP NOT OK YET...\n");
 #endif
         vTaskDelay(500);
@@ -75,7 +87,7 @@ void setup()
     pwm_heat.pause();
     pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution);
     pwm_heat.resume();
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+#if defined(DEBUG_MODE) 
     pwm_heat.printDebug();
     Serial.println("\nPWM started");
 #endif
@@ -91,7 +103,7 @@ void setup()
         ,
         NULL // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+#if defined(DEBUG_MODE) 
     Serial.printf("\nTASK=1:Thermo_get_data OK");
 #endif
 
@@ -104,7 +116,7 @@ void setup()
         ,
         &xTask_modbus_control // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+#if defined(DEBUG_MODE) 
     Serial.printf("\nTASK=2:modbus_control OK");
 #endif
 
@@ -112,7 +124,7 @@ void setup()
 
     mb.server(502); // Start Modbus IP //default port :502
 
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+#if defined(DEBUG_MODE) 
     Serial.printf("\nStart Modbus-TCP  service OK\n");
 #endif
     // Add SENSOR_IREG register - Use addIreg() for analog Inputs
@@ -148,16 +160,6 @@ void setup()
     mb.Hreg(AMB_TEMP_HREG, 0); // 初始化赋值
 
     // init PID
-
-    // read pid data from EEPROM
-
-    Serial.printf("\nEEPROM value check ...\n");
-    Serial.printf("\npid_CT:%ld\n", pid_parm.pid_CT);
-    Serial.printf("\nPID kp:%4.2f\n", pid_parm.p);
-    Serial.printf("\nPID ki:%4.2f\n", pid_parm.i);
-    Serial.printf("\nPID kd:%4.2f\n", pid_parm.d);
-    Serial.printf("\nBT fix:%4.2f\n", pid_parm.BT_tempfix);
-
     Heat_pid_controller.begin(&BT_TEMP, &PID_output, &pid_sv, pid_parm.p, pid_parm.i, pid_parm.d);
     Heat_pid_controller.setSampleTime(pid_parm.pid_CT / 1000);                                               // OPTIONAL - will ensure at least 10ms have past between successful compute() calls
     Heat_pid_controller.setOutputLimits(map(pid_out_min, 0, 100, 0, 255), map(pid_out_max, 0, 100, 0, 255)); // 取值范围（0-255）-> (76-205)
