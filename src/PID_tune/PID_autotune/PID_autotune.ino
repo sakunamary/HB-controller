@@ -16,6 +16,8 @@
 #include <pidautotuner.h>
 #include "SparkFun_External_EEPROM.h" // Click here to get the library: http://librarymanager/All#SparkFun_External_EEPROM
 
+
+
 uint8_t MCP3424_address = 0x68;
 long Voltage;                      // Array used to store results
 const int HEAT_OUT_PIN = PWM_HEAT; // GPIO26
@@ -52,6 +54,7 @@ SemaphoreHandle_t xThermoDataMutex = NULL;
 Pwm pwm_heat = Pwm();
 PIDAutotuner tuner = PIDAutotuner();
 ExternalEEPROM I2C_EEPROM;
+DFRobot_AHT20 aht20;
 
 void Task_Thermo_get_data(void *pvParameters);
 void Task_PID_autotune(void *pvParameters);

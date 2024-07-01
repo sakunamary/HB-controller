@@ -1,30 +1,36 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include "config.h"
-#include "I2C_EEPROM.h"
+
 #include "TASK_read_temp.h"
 #include "TASK_modbus_control.h"
+#include "SparkFun_External_EEPROM.h" // Click here to get the library: http://librarymanager/All#SparkFun_External_EEPROM
+
 
 
 String local_IP;
+ExternalEEPROM I2C_EEPROM;
 
 char ap_name[30];
 uint8_t macAddr[6];
 extern double BT_TEMP;
-I2C_EEPROM EEPEOM(0x50);
 
 pid_setting_t pid_parm = {
-    3 * uS_TO_S_FACTOR, // 10s. uinit is micros
-    25.41,
-    1.81,
-    99.74,
-    0.0};
+    .pid_CT = 3* uS_TO_S_FACTOR,
+    .p = 25.41,
+    .i = 1.81,
+    .d = 99.74,
+    .BT_tempfix = 0.0,
+    .ET_tempfix = 0.0,
+    .inlet_tempfix = 0.0,
+    .EX_tempfix = 0.0};
+
 
 void setup()
 {
 
     xThermoDataMutex = xSemaphoreCreateMutex();
-    
+
     pinMode(SYSTEM_RLY, OUTPUT);
     pinMode(FAN_RLY, OUTPUT);
     pinMode(HEAT_RLY, OUTPUT);
@@ -33,20 +39,18 @@ void setup()
     digitalWrite(FAN_RLY, LOW);    // 初始化电路启动；
     digitalWrite(HEAT_RLY, LOW);   // 初始化电路启动；
 
-    // read pid data from EEPROM
-    // EEPROM.begin(sizeof(pid_parm));
-    // EEPROM.get(0, pid_parm);
-
     Serial.begin(BAUDRATE); // for MODBUS TCP debug
 
-    // Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
+    Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
 
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nSerial Started");
 #endif
 
     // INIT SENSOR
-    ADC_MCP3424.NewConversion(); // New conversion is initiated
+    aht20.begin();
+    ADC_MCP3424.NewConversion();
+    I2C_EEPROM.setMemoryType(32);
 
     // 初始化网络服务
     WiFi.macAddress(macAddr);
@@ -85,7 +89,7 @@ void setup()
         ,
         NULL, 5 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
         ,
-        NULL// Running Core decided by FreeRTOS,let core0 run wifi and BT
+        NULL // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nTASK=1:Thermo_get_data OK");
@@ -98,7 +102,7 @@ void setup()
         ,
         NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
         ,
-        &xTask_modbus_control// Running Core decided by FreeRTOS,let core0 run wifi and BT
+        &xTask_modbus_control // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
 #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
     Serial.printf("\nTASK=2:modbus_control OK");
