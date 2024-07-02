@@ -14,7 +14,7 @@
 #include "SparkFun_External_EEPROM.h" // Click here to get the library: http://librarymanager/All#SparkFun_External_EEPROM
 
 pid_setting_t pid_parm = {
-    .pid_CT = 3,
+    .pid_CT = 3 * uS_TO_S_FACTOR,
     .p = 3.023,
     .i = 0.12,
     .d = 33.0,

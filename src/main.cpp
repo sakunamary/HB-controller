@@ -5,7 +5,6 @@
 
 #include "TASK_read_temp.h"
 #include "TASK_modbus_control.h"
-#include "TASK_HMI_Serial.h"
 
 String local_IP;
 ExternalEEPROM I2C_EEPROM;
@@ -61,6 +60,7 @@ void setup()
     else
     {
         I2C_EEPROM.get(LOCATION_SETTINGS, pid_parm);
+
 #if defined(DEBUG_MODE)
         Serial.printf("\nEEPROM value check ...\n");
         Serial.printf("pid_CT:%d\n", pid_parm.pid_CT);
@@ -129,20 +129,6 @@ void setup()
 #if defined(DEBUG_MODE)
     Serial.printf("\nTASK=2:modbus_control OK");
 #endif
-
-    xTaskCreate(
-        TASK_data_to_HMI, "data_to_HMI" //
-        ,
-        1024 * 6 // This stack size can be checked & adjusted by reading the Stack Highwater
-        ,
-        NULL, 3 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-        ,
-        &xTASK_data_to_HMI // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    );
-#if defined(DEBUG_MODE)
-    Serial.printf("\nTASK=3:data_to_HMI OK");
-#endif
-
     // INIT MODBUS
 
     mb.server(502); // Start Modbus IP //default port :502
