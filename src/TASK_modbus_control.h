@@ -7,7 +7,7 @@
 #include <pwmWrite.h>
 #include <pidautotuner.h>
 
-HardwareSerial Serial_HMI(2);      // D16 RX_drumer  D17 TX_drumer
+//HardwareSerial Serial_HMI(1);      // D7 RX_drumer  D6 TX_drumer
 const int HEAT_OUT_PIN = PWM_HEAT; // GPIO26
 const uint32_t frequency = PWM_FREQ;
 const byte resolution = PWM_RESOLUTION; // pwm -0-4096

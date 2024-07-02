@@ -3,7 +3,7 @@
 #define __CONFIG_H__
 
 #define VERSION "1.0.5"
-// #define DEBUG_MODE
+#define DEBUG_MODE
 //  uncomment to make work for HB M6SE ,default is work for HB M2SE
 //#define MODEL_M6S
 

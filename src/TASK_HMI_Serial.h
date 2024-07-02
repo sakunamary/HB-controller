@@ -27,7 +27,7 @@ void TASK_data_to_HMI(void *pvParameters)
         {
             if (xQueueReceive(queue_data_to_HMI, &Serial_DATA_Buffer, timeOut) == pdPASS)
             { // 从接收QueueCMD 接收指令
-                Serial_HMI.write(Serial_DATA_Buffer, BUFFER_SIZE);
+                Serial.write(Serial_DATA_Buffer, BUFFER_SIZE);
                 vTaskDelay(20);
             }
         }
@@ -41,11 +41,11 @@ void TASK_CMD_FROM_HMI(void *pvParameters)
     const TickType_t timeOut = 500;
     while (1)
     {
-        if (Serial_HMI.available())
+        if (Serial.available())
         {
             if (xSemaphoreTake(xSerialReadBufferMutex, timeOut) == pdPASS)
             {
-                Serial_HMI.readBytes(HMI_ReadBuffer, BUFFER_SIZE);
+                Serial.readBytes(HMI_ReadBuffer, BUFFER_SIZE);
                 xQueueSend(queueCMD, &HMI_ReadBuffer, timeOut);   // 串口数据发送至队列
                 xTaskNotify(xTASK_HMI_CMD_handle, 0, eIncrement); // 通知处理任务干活
             }
