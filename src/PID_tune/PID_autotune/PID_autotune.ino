@@ -16,8 +16,6 @@
 #include <pidautotuner.h>
 #include "SparkFun_External_EEPROM.h" // Click here to get the library: http://librarymanager/All#SparkFun_External_EEPROM
 
-
-
 uint8_t MCP3424_address = 0x68;
 long Voltage;                      // Array used to store results
 const int HEAT_OUT_PIN = PWM_HEAT; // GPIO26
@@ -35,7 +33,7 @@ double pid_out_max = PID_MAX_OUT; // 取值范围 （0-100）
 double pid_out_min = PID_MIN_OUT; // 取值范围 （0-100）
 
 pid_setting_t pid_parm = {
-    .pid_CT = 3,
+    .pid_CT = 3 * uS_TO_S_FACTOR,
     .p = 3.0,
     .i = 0.12,
     .d = 33.0,
@@ -138,7 +136,7 @@ void setup()
     // read pid data from EEPROM
 
     tuner.setTargetInputValue(PID_TUNE_SV);
-    tuner.setLoopInterval(pid_parm.pid_CT * uS_TO_S_FACTOR); //interval in uS
+    tuner.setLoopInterval(pid_parm.pid_CT * uS_TO_S_FACTOR);                                  // interval in uS
     tuner.setOutputRange(map(pid_out_min, 0, 100, 0, 255), map(pid_out_max, 0, 100, 0, 255)); // 取值范围转换为（0-255）-> (76-205)
     tuner.setZNMode(PIDAutotuner::ZNModeNoOvershoot);
 
@@ -179,7 +177,7 @@ void Task_Thermo_get_data(void *pvParameters)
             }
             ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
             Voltage = ADC_MCP3424.Measure();
-            BT_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083); // CH1 3001
+            BT_TEMP = pid_parm.BT_tempfix + (((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083)); // CH1 3001
 
             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
         }

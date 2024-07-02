@@ -14,14 +14,14 @@
 #include "SparkFun_External_EEPROM.h" // Click here to get the library: http://librarymanager/All#SparkFun_External_EEPROM
 
 pid_setting_t pid_parm = {
-    .pid_CT = 3 * uS_TO_S_FACTOR,
-    .p = 3.023,
-    .i = 0.12,
-    .d = 33.0,
-    .BT_tempfix = 1.0,
-    .ET_tempfix = 1.5,
-    .inlet_tempfix = 2.5,
-    .EX_tempfix = 1.34};
+    .pid_CT = 3,
+    .p = 25.41,
+    .i = 1.81,
+    .d = 99.74,
+    .BT_tempfix = 0.0,
+    .ET_tempfix = 0.0,
+    .inlet_tempfix = 0.0,
+    .EX_tempfix = 0.0};
 
 ExternalEEPROM I2C_EEPROM;
 
@@ -29,7 +29,7 @@ void loadUserSettings();
 
 void setup()
 {
-        delay(5000);
+    delay(5000);
     // Prepare working .....
     Serial.begin(BAUDRATE);
     Wire.begin();

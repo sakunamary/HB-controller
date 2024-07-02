@@ -14,7 +14,7 @@ uint8_t macAddr[6];
 extern double BT_TEMP;
 
 pid_setting_t pid_parm = {
-    .pid_CT = 3 * uS_TO_S_FACTOR,
+    .pid_CT = 3 ,
     .p = 25.41,
     .i = 1.81,
     .d = 99.74,
@@ -170,7 +170,7 @@ void setup()
 
     // init PID
     Heat_pid_controller.begin(&BT_TEMP, &PID_output, &pid_sv, pid_parm.p, pid_parm.i, pid_parm.d);
-    Heat_pid_controller.setSampleTime(pid_parm.pid_CT / 1000);                                               // OPTIONAL - will ensure at least 10ms have past between successful compute() calls
+    Heat_pid_controller.setSampleTime(pid_parm.pid_CT * uS_TO_S_FACTOR/ 1000);                               // 3000ms 
     Heat_pid_controller.setOutputLimits(map(pid_out_min, 0, 100, 0, 255), map(pid_out_max, 0, 100, 0, 255)); // 取值范围（0-255）-> (76-205)
     Heat_pid_controller.setBias(255.0 / 2.0);
     Heat_pid_controller.setWindUpLimits(-1, 1); // Groth bounds for the integral term to prevent integral wind-up

@@ -3,7 +3,7 @@
 #define __CONFIG_H__
 
 #define VERSION "1.0.5"
-#define DEBUG_MODE
+// #define DEBUG_MODE
 //  uncomment to make work for HB M6SE ,default is work for HB M2SE
 // #define MODEL_M6S
 
@@ -66,7 +66,7 @@ static TaskHandle_t xTask_PID_autotune = NULL;
 static TaskHandle_t xTask_modbus_control = NULL;
 
 SemaphoreHandle_t xThermoDataMutex = NULL;
-SemaphoreHandle_t xSerialReadBufferMutex = NULL;
+
 
 QueueHandle_t queue_data_to_HMI = xQueueCreate(15, sizeof(uint8_t[BUFFER_SIZE])); // 发送到TC4的命令队列
 QueueHandle_t queueCMD = xQueueCreate(15, sizeof(uint8_t[BUFFER_SIZE]));          // 发送到TC4的命令队列
