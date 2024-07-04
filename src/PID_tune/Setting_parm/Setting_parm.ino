@@ -22,6 +22,7 @@ pid_setting_t pid_parm = {
     .ET_tempfix = 0.0,
     .inlet_tempfix = 0.0,
     .EX_tempfix = 0.0};
+
 ExternalEEPROM I2C_EEPROM;
 
 void loadUserSettings();
