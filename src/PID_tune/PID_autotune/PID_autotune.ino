@@ -33,10 +33,10 @@ double pid_out_max = PID_MAX_OUT; // 取值范围 （0-100）
 double pid_out_min = PID_MIN_OUT; // 取值范围 （0-100）
 
 pid_setting_t pid_parm = {
-    .pid_CT = 3 * uS_TO_S_FACTOR,
-    .p = 3.0,
-    .i = 0.12,
-    .d = 33.0,
+    .pid_CT = 3 ,
+    .p = 25.41,
+    .i = 1.81,
+    .d = 99.74,
     .BT_tempfix = 0.0,
     .ET_tempfix = 0.0,
     .inlet_tempfix = 0.0,
