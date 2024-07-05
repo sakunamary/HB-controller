@@ -35,6 +35,7 @@
 
 #define PID_MIN_OUT 0
 #define PID_MAX_OUT 60
+#define PID_TUNE_SV 180
 
 const int BUFFER_SIZE = 16;
 
@@ -58,36 +59,15 @@ typedef struct eeprom_settings
     double EX_tempfix;
 } pid_setting_t;
 
-
-static TaskHandle_t xTASK_data_to_HMI = NULL;
-static TaskHandle_t xTASK_CMD_HMI = NULL;
-static TaskHandle_t xTASK_HMI_CMD_handle = NULL;
-static TaskHandle_t xTask_PID_autotune = NULL;
-static TaskHandle_t xTask_modbus_control = NULL;
-
-SemaphoreHandle_t xThermoDataMutex = NULL;
-
-
-QueueHandle_t queue_data_to_HMI = xQueueCreate(15, sizeof(uint8_t[BUFFER_SIZE])); // 发送到TC4的命令队列
-QueueHandle_t queueCMD = xQueueCreate(15, sizeof(uint8_t[BUFFER_SIZE]));          // 发送到TC4的命令队列
-
 #endif
 // pid
-
-// 20pa  CT:3s SV:180  60 -5
-// kp 12.95
-// ki 1.05
-// kd 105.4
-
-// kp 16.14
-// ki 1.42
-// kd 121.33
-
-// kp 15.59
-// ki 1.36
-// kd 120.24
-
 // 20 pa CT 3s SV 180  60-0
 // p 11.52
 // i 0.98
 // d 89.74
+
+
+// 25 pa CT 3s SV 180  60-0
+// p 7.42
+// i 0.46
+// d 79.48

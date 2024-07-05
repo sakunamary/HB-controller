@@ -2,7 +2,7 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#define VERSION "1.0.5"
+#define VERSION "1.0.6"
 // #define DEBUG_MODE
 //  uncomment to make work for HB M6SE ,default is work for HB M2SE
 // #define MODEL_M6S
