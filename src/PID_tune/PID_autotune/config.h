@@ -71,3 +71,9 @@ typedef struct eeprom_settings
 // p 7.42
 // i 0.46
 // d 79.48
+
+
+// 25 pa CT 2s SV 180  60-0
+// p 11.52
+// i 0.98
+// d 89.74

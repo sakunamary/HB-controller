@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include "config.h"
+#include "HardwareSerial.h"
 #include "SparkFun_External_EEPROM.h" // Click here to get the library: http://librarymanager/All#SparkFun_External_EEPROM
 
 #include "TASK_read_temp.h"
@@ -25,7 +26,7 @@ pid_setting_t pid_parm = {
 
 void setup()
 {
-
+    //loopTaskWDTEnabled = true;
     xThermoDataMutex = xSemaphoreCreateMutex();
 
     pinMode(SYSTEM_RLY, OUTPUT);
@@ -90,7 +91,7 @@ void setup()
 #if defined(DEBUG_MODE)
         Serial.printf("\nWiFi AP NOT OK YET...\n");
 #endif
-        vTaskDelay(500);
+        vTaskDelay(1000);
     }
 
     // Init pwm output
