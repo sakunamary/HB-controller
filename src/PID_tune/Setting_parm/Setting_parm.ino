@@ -79,11 +79,11 @@ void setup() {
   vTaskDelay(50);
   ADC_MCP3424.Configuration(1, ADC_BIT, 1, 1);
   Voltage = ADC_MCP3424.Measure();
-  INLET_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0042033);  // CH1  0.0039083
+  INLET_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083);  // CH1  0.0039083
   vTaskDelay(50);
   ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
   Voltage = ADC_MCP3424.Measure();
-  BT_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0042733);  // CH3
+  BT_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083);  // CH3
 
   Serial.printf("Temp raw:: AMB_TEMP:%4.2f;BT:%4.2f; INLET:%4.2f;EX_TEMP:%4.2f\n", AMB_TEMP, BT_TEMP, INLET_TEMP, EX_TEMP);
 

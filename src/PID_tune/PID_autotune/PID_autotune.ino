@@ -168,7 +168,7 @@ void Task_Thermo_get_data(void *pvParameters) {  // function
       vTaskDelay(50);
       ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
       Voltage = ADC_MCP3424.Measure();
-      BT_TEMP = pid_parm.BT_tempfix + (((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0042733));  // CH1 3001
+      BT_TEMP = pid_parm.BT_tempfix + (((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083));  // CH1 3001
       // Serial.printf("AMB_TEMP:%4.2f,BT_TEMP:%4.2f\n", AMB_TEMP, BT_TEMP);
       xSemaphoreGive(xThermoDataMutex);  // end of lock mutex
     }
