@@ -176,7 +176,8 @@ void Task_modbus_control(void *pvParameters)
 }
 
 #endif
-
+// printh 00 00 00 ff ff ff 88 ff ff ff//输出上电信息到串口
+// 69 ff 00 ff ff ff 69 69 69 67 67 67 ff ff ff ff  //握手协议
 // HB --> HMI的控制状态帧 FrameLenght = 16
 // 帧头: 69 FF
 // 类型:02控制数据

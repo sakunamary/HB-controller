@@ -137,6 +137,11 @@ QueueHandle_t queue_data_to_HMI = xQueueCreate(15, sizeof(uint8_t[BUFFER_SIZE]))
 QueueHandle_t queueCMD = xQueueCreate(15, sizeof(uint8_t[BUFFER_SIZE]));          // 发送到TC4的命令队列
 
 #endif
+
+// printh 00 00 00 ff ff ff 88 ff ff ff//输出上电信息到串口
+// 69 ff 00 ff ff ff 69 69 69 67 67 67 ff ff ff ff  //握手协议
+
+
 // HB --> HMI的数据帧 FrameLenght = 16
 // 帧头: 67 FF
 // 类型: 01温度数据
