@@ -4,15 +4,15 @@
 #include <Arduino.h>
 #include <config.h>
 #include "ArduPID.h"
-#include <pwmWrite.h>
+#include <ESP32Servo.h>
 #include <pidautotuner.h>
 
-//HardwareSerial Serial_HMI(1);      // D7 RX_drumer  D6 TX_drumer
+// HardwareSerial Serial_HMI(1);      // D7 RX_drumer  D6 TX_drumer
 const int HEAT_OUT_PIN = PWM_HEAT; // GPIO26
-const uint32_t frequency = PWM_FREQ;
+const int frequency = PWM_FREQ;
 const byte resolution = PWM_RESOLUTION; // pwm -0-4096
+extern ESP32PWM pwm_heat;
 
-Pwm pwm_heat = Pwm();
 ArduPID Heat_pid_controller;
 
 uint16_t last_PWR;
@@ -22,12 +22,13 @@ const uint16_t HEAT_HREG = 3007;       // HEAT SWTICH
 const uint16_t PID_SV_HREG = 3008;     // PID SV
 const uint16_t PID_STATUS_HREG = 3009; // PID RUNNING STATUS
 
-
 int heat_pwr_to_SSR = 0;
 bool init_status = true;
 bool pid_status = false;
 long prevMicroseconds;
 long microseconds;
+
+extern const byte pwm_heat_out;
 
 double PID_output; // 取值范围 （0-255）
 double pid_sv = 0;
@@ -57,7 +58,8 @@ void Task_modbus_control(void *pvParameters)
                 heat_pwr_to_SSR = last_PWR;
                 pid_sv = 0;
                 mb.Hreg(PID_SV_HREG, 0);
-                pwm_heat.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
+                pwm_heat.writeScaled(map(heat_pwr_to_SSR, 0, 100, 0.23, 0.85));
+                //pwm_heat.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
                 xSemaphoreGive(xThermoDataMutex);                                                            // end of lock mutex
             }
 
@@ -74,8 +76,8 @@ void Task_modbus_control(void *pvParameters)
                         pid_status = true; // update value
                         pid_sv = mb.Hreg(PID_SV_HREG) / 10;
                         Heat_pid_controller.start();
-                        Heat_pid_controller.compute();                                               // 计算pid输出
-                        heat_pwr_to_SSR = map(PID_output-2, 0, 255, 0, 100); // 转换为格式 pid_output (0,255) -> (0,100)
+                        Heat_pid_controller.compute();                         // 计算pid输出
+                        heat_pwr_to_SSR = map(PID_output - 2, 0, 255, 0, 100); // 转换为格式 pid_output (0,255) -> (0,100)
                         last_PWR = heat_pwr_to_SSR;
                         mb.Hreg(PWR_HREG, heat_pwr_to_SSR);
                         xSemaphoreGive(xThermoDataMutex);
@@ -87,7 +89,7 @@ void Task_modbus_control(void *pvParameters)
                     {
                         pid_sv = mb.Hreg(PID_SV_HREG) / 10; // 计算pid输出
                         Heat_pid_controller.compute();
-                        heat_pwr_to_SSR = map(PID_output-2, 0, 255, 0, 100); // 转换为格式 pid_output (0,255) -> (0,100)
+                        heat_pwr_to_SSR = map(PID_output - 2, 0, 255, 0, 100); // 转换为格式 pid_output (0,255) -> (0,100)
                         last_PWR = heat_pwr_to_SSR;
                         mb.Hreg(PWR_HREG, heat_pwr_to_SSR);
                         xSemaphoreGive(xThermoDataMutex);
@@ -122,7 +124,8 @@ void Task_modbus_control(void *pvParameters)
                     }
                 }
             }
-            pwm_heat.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
+            pwm_heat.writeScaled(map(heat_pwr_to_SSR, 0, 100, 0.23, 0.85));
+            //pwm_heat.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
         }
         vTaskDelay(20);
         /////////////////////////////////////////////////////////////////////////////
@@ -133,7 +136,7 @@ void Task_modbus_control(void *pvParameters)
             if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 整合数据帧到HMI
             {
                 digitalWrite(HEAT_RLY, mb.Hreg(HEAT_HREG)); // 将artisan的控制值控制开关
-                xSemaphoreGive(xThermoDataMutex); // end of lock mutex
+                xSemaphoreGive(xThermoDataMutex);           // end of lock mutex
             }
         }
         vTaskDelay(20);
@@ -144,7 +147,7 @@ void Task_modbus_control(void *pvParameters)
             if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 整合数据帧到HMI
             {
                 digitalWrite(FAN_RLY, mb.Hreg(FAN_HREG)); // 将artisan的控制值控制开关
-                xSemaphoreGive(xThermoDataMutex); // end of lock mutex
+                xSemaphoreGive(xThermoDataMutex);         // end of lock mutex
             }
         }
     }

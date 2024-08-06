@@ -3,19 +3,22 @@
 #include "config.h"
 #include "HardwareSerial.h"
 #include "SparkFun_External_EEPROM.h" // Click here to get the library: http://librarymanager/All#SparkFun_External_EEPROM
+#include <ESP32Servo.h>
 
 #include "TASK_read_temp.h"
 #include "TASK_modbus_control.h"
 
 String local_IP;
 ExternalEEPROM I2C_EEPROM;
+ESP32PWM pwm_heat;
 
 char ap_name[30];
 uint8_t macAddr[6];
 extern double BT_TEMP;
+const byte pwm_heat_out = PWM_HEAT;
 
 pid_setting_t pid_parm = {
-    .pid_CT = 3,
+    .pid_CT = 2,
     .p = 25.41,
     .i = 1.81,
     .d = 99.74,
@@ -26,8 +29,9 @@ pid_setting_t pid_parm = {
 
 void setup()
 {
-    //loopTaskWDTEnabled = true;
+    // loopTaskWDTEnabled = true;
     xThermoDataMutex = xSemaphoreCreateMutex();
+    ESP32PWM::allocateTimer(0);
 
     pinMode(SYSTEM_RLY, OUTPUT);
     pinMode(FAN_RLY, OUTPUT);
@@ -95,13 +99,8 @@ void setup()
     }
 
     // Init pwm output
-    pwm_heat.pause();
-    pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution);
-    pwm_heat.resume();
-#if defined(DEBUG_MODE)
-    pwm_heat.printDebug();
-    Serial.println("\nPWM started");
-#endif
+    pwm_heat.attachPin(pwm_heat_out, frequency, resolution); // 1KHz 8 bit
+    pwm_heat.writeScaled(0.0);
 
     /*---------- Task Definition ---------------------*/
     // Setup tasks to run independently.
