@@ -24,7 +24,7 @@ const byte pwm_heat_out = PWM_HEAT;
 double BT_TEMP;
 double AMB_RH;
 double AMB_TEMP;
-
+float PID_TUNE_SV =180.0;
 long prevMicroseconds;
 long microseconds;
 double pid_tune_output;
@@ -131,12 +131,12 @@ void setup()
 
     // INIT PID AUTOTUNE
     // read pid data from EEPROM
-
     tuner.setTargetInputValue(PID_TUNE_SV);
-    tuner.setTuningCycles(6);
+    tuner.setTuningCycles(5);
     tuner.setLoopInterval(pid_parm.pid_CT * uS_TO_S_FACTOR);                                  // interval in uS
     tuner.setOutputRange(map(pid_out_min, 0, 100, 0, 255), map(pid_out_max, 0, 100, 0, 255)); // 取值范围转换为（0-255）-> (76-205)
     tuner.setZNMode(PIDAutotuner::ZNModeNoOvershoot);
+    tuner.setWindUpLimits(-2.0,2.0);
 
     Serial.printf("\nPID Auto Tune will be started in 3 seconde...\n");
     vTaskDelay(3000);                               // 让pid关闭有足够时间执行
@@ -200,67 +200,157 @@ void Task_PID_autotune(void *pvParameters)
         if (xResult == pdTRUE)
         {
             // 开始 PID自动整定
-            digitalWrite(HEAT_RLY, HIGH); // 启动发热丝
-            pwm_heat.writeScaled(0);
-            vTaskDelay(1000);
-            while (!tuner.isFinished()) // 开始自动整定循环
+
+            for (int loop = 0; loop < 3; loop++)
             {
-                prevMicroseconds = microseconds;
-                microseconds = micros();
-
-                if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
+                if (loop == 0)
                 {
-                    pid_tune_output = tuner.tunePID(BT_TEMP, microseconds);
-                    pwm_heat.write(map(heat_pwr_to_SSR, 0, 100, 230, 850));
-                    // pwm_heat.write(HEAT_OUT_PIN, map(pid_tune_output, 0, 255, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
-                    xSemaphoreGive(xThermoDataMutex); // end of lock mutex
+                    PID_TUNE_SV = PID_TUNE_SV_1;
+                    tuner.setTargetInputValue(PID_TUNE_SV);
+                    digitalWrite(HEAT_RLY, HIGH); // 启动发热丝
+                    pwm_heat.writeScaled(0);
+                    vTaskDelay(1000);
+                    while (!tuner.isFinished()) // 开始自动整定循环
+                    {
+                        prevMicroseconds = microseconds;
+                        microseconds = micros();
+
+                        if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
+                        {
+                            pid_tune_output = tuner.tunePID(BT_TEMP, microseconds);
+                            pwm_heat.write(map(pid_tune_output, 0, 100, 230, 850));
+                            // pwm_heat.write(HEAT_OUT_PIN, map(pid_tune_output, 0, 255, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
+                            xSemaphoreGive(xThermoDataMutex); // end of lock mutex
+                        }
+                        Serial.printf("PID Auto Pharse 1 Tuneing...OUTPUT:%4.2f BT_temp:%4.2f AMB_TEMP:%4.2f\n", pid_tune_output, BT_TEMP, AMB_TEMP);
+                        //  This loop must run at the same speed as the PID control loop being tuned
+                        while (micros() - microseconds < pid_parm.pid_CT * uS_TO_S_FACTOR) // time units : us
+                            delayMicroseconds(1);
+                    }
+                    // Turn the output off here.
+                    pwm_heat.writeScaled(0);
+                    // pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution);
+                    digitalWrite(HEAT_RLY, LOW); // 启动发热丝
+                    // Get PID gains - set your PID controller's gains to these
+                    pid_parm.p = tuner.getKp();
+                    pid_parm.i = tuner.getKi();
+                    pid_parm.d = tuner.getKd();
+                    Serial.printf("\nPID Auto Tune Pharse I  Finished ...\n");
+                    Serial.printf("\nPID kp:%4.2f\n", pid_parm.p);
+                    Serial.printf("\nPID ki:%4.2f\n", pid_parm.i);
+                    Serial.printf("\nPID kd:%4.2f\n", pid_parm.d);
+
+                    I2C_EEPROM.put(0, pid_parm);
+
+                    Serial.printf("\nPID parms Pharse 1  saved ...\n");
                 }
-                Serial.printf("PID Auto Tuneing...OUTPUT:%4.2f BT_temp:%4.2f AMB_TEMP:%4.2f\n", pid_tune_output, BT_TEMP, AMB_TEMP);
-                //  This loop must run at the same speed as the PID control loop being tuned
-                while (micros() - microseconds < pid_parm.pid_CT * uS_TO_S_FACTOR) // time units : us
-                    delayMicroseconds(1);
+                else if (loop == 1)
+                {
+                    PID_TUNE_SV = PID_TUNE_SV_2;
+                    tuner.setTargetInputValue(PID_TUNE_SV);
+                    digitalWrite(HEAT_RLY, HIGH); // 启动发热丝
+                    pwm_heat.writeScaled(0);
+                    vTaskDelay(1000);
+                    while (!tuner.isFinished()) // 开始自动整定循环
+                    {
+                        prevMicroseconds = microseconds;
+                        microseconds = micros();
+
+                        if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
+                        {
+                            pid_tune_output = tuner.tunePID(BT_TEMP, microseconds);
+                            pwm_heat.write(map(pid_tune_output, 0, 100, 230, 850));
+                            // pwm_heat.write(HEAT_OUT_PIN, map(pid_tune_output, 0, 255, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
+                            xSemaphoreGive(xThermoDataMutex); // end of lock mutex
+                        }
+                        Serial.printf("PID Auto Pharse 2 Tuneing...OUTPUT:%4.2f BT_temp:%4.2f AMB_TEMP:%4.2f\n", pid_tune_output, BT_TEMP, AMB_TEMP);
+                        //  This loop must run at the same speed as the PID control loop being tuned
+                        while (micros() - microseconds < pid_parm.pid_CT * uS_TO_S_FACTOR) // time units : us
+                            delayMicroseconds(1);
+                    }
+                    // Turn the output off here.
+                    pwm_heat.writeScaled(0);
+                    // pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution);
+                    digitalWrite(HEAT_RLY, LOW); // 启动发热丝
+                    // Get PID gains - set your PID controller's gains to these
+                    pid_parm.p = tuner.getKp();
+                    pid_parm.i = tuner.getKi();
+                    pid_parm.d = tuner.getKd();
+                    Serial.printf("\nPID Auto Tune Pharse 2  Finished ...\n");
+                    Serial.printf("\nPID kp:%4.2f\n", pid_parm.p);
+                    Serial.printf("\nPID ki:%4.2f\n", pid_parm.i);
+                    Serial.printf("\nPID kd:%4.2f\n", pid_parm.d);
+
+                    I2C_EEPROM.put(1, pid_parm);
+
+                    Serial.printf("\nPID parms Pharse 2 saved ...\n");
+                }
+                else if (loop == 2)
+                {
+                    PID_TUNE_SV = PID_TUNE_SV_3;
+                    tuner.setTargetInputValue(PID_TUNE_SV);
+                    digitalWrite(HEAT_RLY, HIGH); // 启动发热丝
+                    pwm_heat.writeScaled(0);
+                    vTaskDelay(1000);
+                    while (!tuner.isFinished()) // 开始自动整定循环
+                    {
+                        prevMicroseconds = microseconds;
+                        microseconds = micros();
+
+                        if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
+                        {
+                            pid_tune_output = tuner.tunePID(BT_TEMP, microseconds);
+                            pwm_heat.write(map(pid_tune_output, 0, 100, 230, 850));
+                            // pwm_heat.write(HEAT_OUT_PIN, map(pid_tune_output, 0, 255, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
+                            xSemaphoreGive(xThermoDataMutex); // end of lock mutex
+                        }
+                        Serial.printf("PID Auto Pharse 3  Tuneing...OUTPUT:%4.2f BT_temp:%4.2f AMB_TEMP:%4.2f\n", pid_tune_output, BT_TEMP, AMB_TEMP);
+                        //  This loop must run at the same speed as the PID control loop being tuned
+                        while (micros() - microseconds < pid_parm.pid_CT * uS_TO_S_FACTOR) // time units : us
+                            delayMicroseconds(1);
+                    }
+                    // Turn the output off here.
+                    pwm_heat.writeScaled(0);
+                    // pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution);
+                    digitalWrite(HEAT_RLY, LOW); // 启动发热丝
+                    // Get PID gains - set your PID controller's gains to these
+                    pid_parm.p = tuner.getKp();
+                    pid_parm.i = tuner.getKi();
+                    pid_parm.d = tuner.getKd();
+                    Serial.printf("\nPID Auto Tune Pharse 3 Finished ...\n");
+                    Serial.printf("\nPID kp:%4.2f\n", pid_parm.p);
+                    Serial.printf("\nPID ki:%4.2f\n", pid_parm.i);
+                    Serial.printf("\nPID kd:%4.2f\n", pid_parm.d);
+
+                    I2C_EEPROM.put(2, pid_parm);
+
+                    Serial.printf("\nPID parms saved ...\n");
+                }
             }
-            // Turn the output off here.
-            pwm_heat.writeScaled(0);
-            // pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution);
-            digitalWrite(HEAT_RLY, LOW); // 启动发热丝
-            // Get PID gains - set your PID controller's gains to these
-            pid_parm.p = tuner.getKp();
-            pid_parm.i = tuner.getKi();
-            pid_parm.d = tuner.getKd();
-            Serial.printf("\nPID Auto Tune Finished ...\n");
-            Serial.printf("\nPID kp:%4.2f\n", pid_parm.p);
-            Serial.printf("\nPID ki:%4.2f\n", pid_parm.i);
-            Serial.printf("\nPID kd:%4.2f\n", pid_parm.d);
+        }
+        vTaskDelete(xTask_Thermo_get_data);
+        vTaskDelete(NULL);
+    }
+}
+    // Load the current settings from EEPROM into the settings struct
+    void loadUserSettings()
+    {
+        // Uncomment these lines to forcibly erase the EEPROM and see how the defaults are set
+        // Serial.println("Erasing EEPROM");
+        // myMem.erase();
 
+        // Check to see if EEPROM is blank. If the first four spots are zeros then we can assume the EEPROM is blank.
+        uint32_t testRead = 0;
+        if (I2C_EEPROM.get(LOCATION_SETTINGS, testRead) == 0) // EEPROM address to read, thing to read into
+        {
+            // At power on, settings are set to defaults within the struct.
+            // So go record the struct as it currently exists so that defaults are set.
             I2C_EEPROM.put(LOCATION_SETTINGS, pid_parm);
-
-            Serial.printf("\nPID parms saved ...\n");
+            Serial.println("Default settings applied");
+        }
+        else
+        {
+            // Read current settings
+            I2C_EEPROM.get(LOCATION_SETTINGS, pid_parm);
         }
     }
-    vTaskDelete(xTask_Thermo_get_data);
-    vTaskDelete(NULL);
-}
-
-// Load the current settings from EEPROM into the settings struct
-void loadUserSettings()
-{
-    // Uncomment these lines to forcibly erase the EEPROM and see how the defaults are set
-    // Serial.println("Erasing EEPROM");
-    // myMem.erase();
-
-    // Check to see if EEPROM is blank. If the first four spots are zeros then we can assume the EEPROM is blank.
-    uint32_t testRead = 0;
-    if (I2C_EEPROM.get(LOCATION_SETTINGS, testRead) == 0) // EEPROM address to read, thing to read into
-    {
-        // At power on, settings are set to defaults within the struct.
-        // So go record the struct as it currently exists so that defaults are set.
-        I2C_EEPROM.put(LOCATION_SETTINGS, pid_parm);
-        Serial.println("Default settings applied");
-    }
-    else
-    {
-        // Read current settings
-        I2C_EEPROM.get(LOCATION_SETTINGS, pid_parm);
-    }
-}

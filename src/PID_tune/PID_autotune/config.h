@@ -35,7 +35,7 @@
 
 #define PID_MIN_OUT 0
 #define PID_MAX_OUT 60
-#define PID_TUNE_SV 180
+
 
 const int BUFFER_SIZE = 16;
 
@@ -43,6 +43,10 @@ const int BUFFER_SIZE = 16;
 #define RREF 100
 #define RNOMINAL 1000
 #define ADC_BIT 16
+
+#define  PID_TUNE_SV_1 150
+#define  PID_TUNE_SV_2 170
+#define  PID_TUNE_SV_3 190
 
 // EEPROM address
 #define LOCATION_SETTINGS 0
