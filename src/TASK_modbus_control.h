@@ -58,7 +58,7 @@ void Task_modbus_control(void *pvParameters)
                 heat_pwr_to_SSR = last_PWR;
                 pid_sv = 0;
                 mb.Hreg(PID_SV_HREG, 0);
-                pwm_heat.writeScaled(map(heat_pwr_to_SSR, 0, 100, 0.23, 0.85));
+                pwm_heat.write(map(heat_pwr_to_SSR, 0, 100, 230, 850));
                 //pwm_heat.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
                 xSemaphoreGive(xThermoDataMutex);                                                            // end of lock mutex
             }
@@ -124,7 +124,7 @@ void Task_modbus_control(void *pvParameters)
                     }
                 }
             }
-            pwm_heat.writeScaled(map(heat_pwr_to_SSR, 0, 100, 0.23, 0.85));
+            pwm_heat.write(map(heat_pwr_to_SSR, 0, 100, 230, 850));
             //pwm_heat.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
         }
         vTaskDelay(20);

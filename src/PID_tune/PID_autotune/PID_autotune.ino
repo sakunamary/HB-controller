@@ -211,7 +211,7 @@ void Task_PID_autotune(void *pvParameters)
                 if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
                 {
                     pid_tune_output = tuner.tunePID(BT_TEMP, microseconds);
-                    pwm_heat.writeScaled(map(pid_tune_output, 0, 255, 0.23, 0.85));
+                    pwm_heat.write(map(heat_pwr_to_SSR, 0, 100, 230, 850));
                     // pwm_heat.write(HEAT_OUT_PIN, map(pid_tune_output, 0, 255, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
                     xSemaphoreGive(xThermoDataMutex); // end of lock mutex
                 }
