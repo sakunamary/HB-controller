@@ -217,7 +217,7 @@ void Task_PID_autotune(void *pvParameters)
                         if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
                         {
                             pid_tune_output = tuner.tunePID(BT_TEMP, microseconds);
-                            pwm_heat.write(map(pid_tune_output, 0, 100, 230, 850));
+                            pwm_heat.write(map(pid_tune_output, 0, 255, 230, 850));
                             // pwm_heat.write(HEAT_OUT_PIN, map(pid_tune_output, 0, 255, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
                             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
                         }
@@ -245,11 +245,13 @@ void Task_PID_autotune(void *pvParameters)
                 }
                 else if (loop == 1)
                 {
+
                     PID_TUNE_SV = PID_TUNE_SV_2;
                     tuner.setTargetInputValue(PID_TUNE_SV);
                     digitalWrite(HEAT_RLY, HIGH); // 启动发热丝
                     pwm_heat.writeScaled(0);
                     vTaskDelay(1000);
+                    tuner.startTuningLoop(micros());
                     while (!tuner.isFinished()) // 开始自动整定循环
                     {
                         prevMicroseconds = microseconds;
@@ -258,7 +260,7 @@ void Task_PID_autotune(void *pvParameters)
                         if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
                         {
                             pid_tune_output = tuner.tunePID(BT_TEMP, microseconds);
-                            pwm_heat.write(map(pid_tune_output, 0, 100, 230, 850));
+                            pwm_heat.write(map(pid_tune_output, 0, 255, 230, 850));
                             // pwm_heat.write(HEAT_OUT_PIN, map(pid_tune_output, 0, 255, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
                             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
                         }
@@ -291,6 +293,7 @@ void Task_PID_autotune(void *pvParameters)
                     digitalWrite(HEAT_RLY, HIGH); // 启动发热丝
                     pwm_heat.writeScaled(0);
                     vTaskDelay(1000);
+                    tuner.startTuningLoop(micros());
                     while (!tuner.isFinished()) // 开始自动整定循环
                     {
                         prevMicroseconds = microseconds;
@@ -299,7 +302,7 @@ void Task_PID_autotune(void *pvParameters)
                         if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
                         {
                             pid_tune_output = tuner.tunePID(BT_TEMP, microseconds);
-                            pwm_heat.write(map(pid_tune_output, 0, 100, 230, 850));
+                            pwm_heat.write(map(pid_tune_output, 0, 255, 230, 850));
                             // pwm_heat.write(HEAT_OUT_PIN, map(pid_tune_output, 0, 255, 230, 850), frequency, resolution); // 输出新火力pwr到SSRÍ
                             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
                         }

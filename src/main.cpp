@@ -84,7 +84,7 @@ void setup()
     // Serial_debug.println("WiFi.mode(AP):");
     WiFi.mode(WIFI_AP);
     sprintf(ap_name, "HB-%02X%02X%02X", macAddr[3], macAddr[4], macAddr[5]);
-    if (WiFi.softAP(ap_name, "12345678"))
+    if (WiFi.softAP(ap_name, "88888888"))
     { // defualt IP address :192.168.4.1 password min 8 digis
 #if defined(DEBUG_MODE)
         Serial.printf("\nWiFi AP: %s Started\n", ap_name);
