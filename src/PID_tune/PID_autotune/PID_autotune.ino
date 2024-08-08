@@ -136,8 +136,7 @@ void setup()
     tuner.setLoopInterval(pid_parm.pid_CT * uS_TO_S_FACTOR);                                  // interval in uS
     tuner.setOutputRange(map(pid_out_min, 0, 100, 0, 255), map(pid_out_max, 0, 100, 0, 255)); // 取值范围转换为（0-255）-> (76-205)
     tuner.setZNMode(PIDAutotuner::ZNModeNoOvershoot);
-    tuner.setWindUpLimits(-2.0,2.0);
-
+    
     Serial.printf("\nPID Auto Tune will be started in 3 seconde...\n");
     vTaskDelay(3000);                               // 让pid关闭有足够时间执行
     xTaskNotify(xTask_PID_autotune, 0, eIncrement); // 通知处理任务干活

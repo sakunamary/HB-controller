@@ -81,10 +81,10 @@ void Task_Thermo_get_data(void *pvParameters)
             INLET_TEMP = pid_parm.inlet_tempfix + (((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083)); // CH1
             vTaskDelay(50);
             ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
-            BT_TEMP = pid_parm.inlet_tempfix + (((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083)); // CH3
+            BT_TEMP = pid_parm.bt_tempfix + (((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083)); // CH3
 
 #if defined(MODEL_M6S)
-            ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
+            ADC_MCP3424.Configuration(4, ADC_BIT, 1, 1);
             Voltage = ADC_MCP3424.Measure();
             ET_TEMP = pid_parm.ET_tempfix + (((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083)); // CH4
 #endif
