@@ -80,6 +80,7 @@ void setup() {
   ADC_MCP3424.Configuration(1, ADC_BIT, 1, 1);
   Voltage = ADC_MCP3424.Measure();
   INLET_TEMP = ((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083);  // CH1  0.0039083
+  
   vTaskDelay(50);
   ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
   Voltage = ADC_MCP3424.Measure();
