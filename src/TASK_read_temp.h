@@ -18,7 +18,7 @@ long Voltage; // Array used to store results
 MCP3424 ADC_MCP3424(MCP3424_address); // Declaration of MCP3424 A2=0 A1=1 A0=0
 
 DFRobot_AHT20 aht20;
-
+extern ArduPID Heat_pid_controller;
 TypeK temp_K_cal;
 
 double BT_TEMP;
@@ -32,7 +32,7 @@ int i, j;
 double bt_temp[5];
 double temp_;
 extern pid_setting_t pid_parm;
-
+extern bool pid_status;
 // Need this for the lower level access to set them up.
 
 // Modbus Registers Offsets
@@ -88,13 +88,27 @@ void Task_Thermo_get_data(void *pvParameters)
             Voltage = ADC_MCP3424.Measure();
             ET_TEMP = pid_parm.ET_tempfix + (((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083)); // CH4
 #endif
+
+        if (pid_status)
+        {
+            if(BT_TEMP >= PID_TUNE_SV_1 )  {
+                 I2C_EEPROM.get(1, pid_parm);
+                 Heat_pid_controller.setCoefficients(pid_parm.p,pid_parm.i,pid_parm.d);
+
+
+            }else  if(BT_TEMP >= PID_TUNE_SV_2 ) {
+                I2C_EEPROM.get(2, pid_parm);
+                Heat_pid_controller.setCoefficients(pid_parm.p,pid_parm.i,pid_parm.d);
+            }
+        }
+
             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
         }
 
 #if defined(DEBUG_MODE) 
-        Serial.printf("CH3 bt:%d\n", int(round(BT_TEMP * 10)));
-        Serial.printf("CH1 inlet:%d\n", int(round(INLET_TEMP * 10)));
-        Serial.printf("CH2 ex:%d\n", int(round(BT_TEMP * 10)));
+        Serial.printf("CH3 (3001) bt:%d\n", int(round(BT_TEMP * 10)));
+        Serial.printf("CH1 (3003) inlet:%d\n", int(round(INLET_TEMP * 10)));
+        Serial.printf("CH2 (3004) ex:%d\n", int(round(BT_TEMP * 10)));
         Serial.println();
 #endif
         // update  Hreg data
