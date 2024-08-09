@@ -43,6 +43,11 @@ const int BUFFER_SIZE = 16;
 #define RNOMINAL 1000
 #define ADC_BIT 16
 
+
+#define  PID_TUNE_SV_1 155
+#define  PID_TUNE_SV_2 175
+#define  PID_TUNE_SV_3 195
+
 // EEPROM address
 #define LOCATION_SETTINGS 0
 //

@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 #include <config.h>
-#include "ArduPID.h"
 #include <ESP32Servo.h>
 #include <pidautotuner.h>
 
@@ -13,7 +12,7 @@ const int frequency = PWM_FREQ;
 const byte resolution = PWM_RESOLUTION; // pwm -0-4096
 extern ESP32PWM pwm_heat;
 
-ArduPID Heat_pid_controller;
+extern ArduPID Heat_pid_controller;
 
 uint16_t last_PWR;
 const uint16_t PWR_HREG = 3005;        // HEAT PWR

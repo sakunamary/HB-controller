@@ -6,6 +6,7 @@
 #include <Wire.h>
 #include <MCP3424.h>
 #include "TypeK.h"
+#include "ArduPID.h"
 #include "DFRobot_AHT20.h"
 
 #include <WiFi.h>
@@ -18,7 +19,9 @@ long Voltage; // Array used to store results
 MCP3424 ADC_MCP3424(MCP3424_address); // Declaration of MCP3424 A2=0 A1=1 A0=0
 
 DFRobot_AHT20 aht20;
-extern ArduPID Heat_pid_controller;
+
+ArduPID Heat_pid_controller;
+extern ExternalEEPROM I2C_EEPROM;
 TypeK temp_K_cal;
 
 double BT_TEMP;

@@ -9,6 +9,11 @@
         "string_view": "cpp",
         "initializer_list": "cpp",
         "unordered_set": "cpp",
-        "cstddef": "cpp"
+        "cstddef": "cpp",
+        "memory": "cpp",
+        "istream": "cpp",
+        "functional": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp"
     }
 }
