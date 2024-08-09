@@ -53,7 +53,7 @@ const int BUFFER_SIZE = 16;
 //
 typedef struct eeprom_settings
 {
-    int pid_CT;
+    double pid_CT;
     double p;
     double i;
     double d;

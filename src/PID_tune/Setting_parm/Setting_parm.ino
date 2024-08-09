@@ -112,7 +112,7 @@ void setup() {
     delay(3000);
     I2C_EEPROM.get(0, pid_parm);
     Serial.printf("\nEEPROM value check ...\n");
-    Serial.printf("pid_CT:%d\n", pid_parm.pid_CT);
+    Serial.printf("pid_CT:%4.2f\n", pid_parm.pid_CT);
     Serial.printf("PID kp:%4.2f\n", pid_parm.p);
     Serial.printf("PID ki:%4.2f\n", pid_parm.i);
     Serial.printf("PID kd:%4.2f\n", pid_parm.d);

@@ -59,6 +59,18 @@ void Task_Thermo_get_data(void *pvParameters)
     // Initial the xLastWakeTime variable with the current time.
     xLastWakeTime = xTaskGetTickCount();
 
+#if defined(DEBUG_MODE)
+    Serial.printf("\nEEPROM value check ...\n");
+    Serial.printf("pid_CT:%4.2f\n", pid_parm.pid_CT);
+    Serial.printf("PID kp:%4.2f\n", pid_parm.p);
+    Serial.printf("PID ki:%4.2f\n", pid_parm.i);
+    Serial.printf("PID kd:%4.2f\n", pid_parm.d);
+    Serial.printf("BT fix:%4.2f\n", pid_parm.BT_tempfix);
+    Serial.printf("ET fix:%4.2f\n", pid_parm.ET_tempfix);
+    Serial.printf("Inlet fix:%4.2f\n", pid_parm.inlet_tempfix);
+    Serial.printf("EX fix:%4.2f\n", pid_parm.EX_tempfix);
+#endif
+
     while (1)
     { // for loop
         // Wait for the next cycle (intervel 2000ms).
@@ -92,23 +104,24 @@ void Task_Thermo_get_data(void *pvParameters)
             ET_TEMP = pid_parm.ET_tempfix + (((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083)); // CH4
 #endif
 
-        if (pid_status)
-        {
-            if(BT_TEMP >= PID_TUNE_SV_1 )  {
-                 I2C_EEPROM.get(1, pid_parm);
-                 Heat_pid_controller.setCoefficients(pid_parm.p,pid_parm.i,pid_parm.d);
-
-
-            }else  if(BT_TEMP >= PID_TUNE_SV_2 ) {
-                I2C_EEPROM.get(2, pid_parm);
-                Heat_pid_controller.setCoefficients(pid_parm.p,pid_parm.i,pid_parm.d);
+            if (pid_status)
+            {
+                if (BT_TEMP >= PID_TUNE_SV_1)
+                {
+                    I2C_EEPROM.get(128, pid_parm);
+                    Heat_pid_controller.setCoefficients(pid_parm.p, pid_parm.i, pid_parm.d);
+                }
+                else if (BT_TEMP >= PID_TUNE_SV_2)
+                {
+                    I2C_EEPROM.get(256, pid_parm);
+                    Heat_pid_controller.setCoefficients(pid_parm.p, pid_parm.i, pid_parm.d);
+                }
             }
-        }
 
             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
         }
 
-#if defined(DEBUG_MODE) 
+#if defined(DEBUG_MODE)
         Serial.printf("CH3 (3001) bt:%d\n", int(round(BT_TEMP * 10)));
         Serial.printf("CH1 (3003) inlet:%d\n", int(round(INLET_TEMP * 10)));
         Serial.printf("CH2 (3004) ex:%d\n", int(round(EX_TEMP * 10)));
