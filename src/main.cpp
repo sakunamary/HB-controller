@@ -64,7 +64,7 @@ void setup()
     }
     else
     {
-        I2C_EEPROM.get(LOCATION_SETTINGS, pid_parm);
+        I2C_EEPROM.get(0, pid_parm);
 
 #if defined(DEBUG_MODE)
         Serial.printf("\nEEPROM value check ...\n");
@@ -179,6 +179,18 @@ void setup()
     ////////////////////////////////////////////////////////////////
     vTaskDelay(3000);
     digitalWrite(SYSTEM_RLY, HIGH); // 启动机器
+
+#if defined(DEBUG_MODE)
+        Serial.printf("\nEEPROM value check ...\n");
+        Serial.printf("pid_CT:%d\n", pid_parm.pid_CT);
+        Serial.printf("PID kp:%4.2f\n", pid_parm.p);
+        Serial.printf("PID ki:%4.2f\n", pid_parm.i);
+        Serial.printf("PID kd:%4.2f\n", pid_parm.d);
+        Serial.printf("BT fix:%4.2f\n", pid_parm.BT_tempfix);
+        Serial.printf("ET fix:%4.2f\n", pid_parm.ET_tempfix);
+        Serial.printf("Inlet fix:%4.2f\n", pid_parm.inlet_tempfix);
+        Serial.printf("EX fix:%4.2f\n", pid_parm.EX_tempfix);
+#endif
 }
 
 void loop()
