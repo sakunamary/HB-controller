@@ -230,7 +230,7 @@ void Task_PID_autotune(void *pvParameters) {
           Serial.printf("\nInlet fix:%4.2f", pid_parm.inlet_tempfix);
           Serial.printf("\nEX fix:%4.2f", pid_parm.EX_tempfix);
 
-          I2C_EEPROM.put(128, pid_parm);
+          I2C_EEPROM.put(0, pid_parm);
 
           Serial.printf("\nPID parms Pharse 1  saved ...\n");
         } else if (loop == 1) {
@@ -275,7 +275,7 @@ void Task_PID_autotune(void *pvParameters) {
           Serial.printf("\nInlet fix:%4.2f", pid_parm.inlet_tempfix);
           Serial.printf("\nEX fix:%4.2f", pid_parm.EX_tempfix);
 
-          I2C_EEPROM.put(1, pid_parm);
+          I2C_EEPROM.put(128, pid_parm);
 
           Serial.printf("\nPID parms Pharse 2 saved ...\n");
         } else if (loop == 2) {
