@@ -115,7 +115,7 @@ void setup()
     Serial.printf("EX fix:%4.2f\n", pid_parm.EX_tempfix);
    delay(1000);
     I2C_EEPROM.get(128, pid_parm);
-    Serial.printf("\nEEPROM value 1 check ...\n");
+    Serial.printf("\nEEPROM value 2 check ...\n");
     Serial.printf("pid_CT:%4.2f\n", pid_parm.pid_CT);
     Serial.printf("PID kp:%4.2f\n", pid_parm.p);
     Serial.printf("PID ki:%4.2f\n", pid_parm.i);
@@ -126,7 +126,7 @@ void setup()
     Serial.printf("EX fix:%4.2f\n", pid_parm.EX_tempfix);
    delay(1000);
     I2C_EEPROM.get(256, pid_parm);
-    Serial.printf("\nEEPROM value 1 check ...\n");
+    Serial.printf("\nEEPROM value 3 check ...\n");
     Serial.printf("pid_CT:%4.2f\n", pid_parm.pid_CT);
     Serial.printf("PID kp:%4.2f\n", pid_parm.p);
     Serial.printf("PID ki:%4.2f\n", pid_parm.i);
