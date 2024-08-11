@@ -138,7 +138,7 @@ void Task_modbus_control(void *pvParameters)
             }
             pwm_heat.write(HEAT_OUT_PIN, map(heat_pwr_to_SSR, 0, 100, 250, 1000), frequency, resolution); // 输出新火力pwr到SSRÍ
         }
-        vTaskDelay(20);
+        delay(20);
         /////////////////////////////////////////////////////////////////////////////
         // HEAT
         if (mb.Hreg(HEAT_HREG) != digitalRead(HEAT_RLY)) // heater开关状态发生变动
@@ -155,7 +155,7 @@ void Task_modbus_control(void *pvParameters)
                 // xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
             }
         }
-        vTaskDelay(20);
+        delay(20);
         // FAN
         if (mb.Hreg(FAN_HREG) != digitalRead(FAN_RLY)) // 风扇开关状态发生变动
         {
@@ -172,7 +172,7 @@ void Task_modbus_control(void *pvParameters)
             }
         }
     }
-    vTaskDelay(20);
+    delay(20);
 }
 
 #endif

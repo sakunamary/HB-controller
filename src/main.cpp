@@ -13,7 +13,7 @@ uint8_t macAddr[6];
 extern double BT_TEMP;
 
 pid_setting_t pid_parm ={
- 3 * uS_TO_S_FACTOR, // 10s. uinit is micros
+ 2 * uS_TO_S_FACTOR, // 10s. uinit is micros
 25.41,
 1.81,
 99.74,
@@ -40,7 +40,7 @@ void setup()
     Serial_HMI.begin(BAUD_HMI, SERIAL_8N1, HMI_RX, HMI_TX);
 
 
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+#if defined(DEBUG_MODE)
     Serial.printf("\nSerial Started");
 #endif
 
@@ -60,23 +60,23 @@ void setup()
     sprintf(ap_name, "HB-%02X%02X%02X", macAddr[3], macAddr[4], macAddr[5]);
     if (WiFi.softAP(ap_name, "12345678"))
     { // defualt IP address :192.168.4.1 password min 8 digis
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+#if defined(DEBUG_MODE) 
         Serial.printf("\nWiFi AP: %s Started\n", ap_name);
 #endif
     }
     else
     {
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+#if defined(DEBUG_MODE) 
         Serial.printf("\nWiFi AP NOT OK YET...\n");
 #endif
-        vTaskDelay(500);
+        delay(500);
     }
 
     // Init pwm output
     pwm_heat.pause();
     pwm_heat.write(HEAT_OUT_PIN, 0, frequency, resolution);
     pwm_heat.resume();
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+#if defined(DEBUG_MODE) 
     pwm_heat.printDebug();
     Serial.println("\nPWM started");
 #endif
@@ -92,7 +92,7 @@ void setup()
         ,
         NULL, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+#if defined(DEBUG_MODE) 
     Serial.printf("\nTASK=1:Thermo_get_data OK");
 #endif
 
@@ -105,7 +105,7 @@ void setup()
         ,
         &xTask_modbus_control, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
     );
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+#if defined(DEBUG_MODE) 
     Serial.printf("\nTASK=2:modbus_control OK");
 #endif
 
@@ -118,41 +118,41 @@ void setup()
             ,
             &xTASK_data_to_HMI, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
         );
-    #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+    #if defined(DEBUG_MODE) 
         Serial.printf("\nTASK=3:data_to_HMI OK");
     #endif
 
-    //     xTaskCreatePinnedToCore(
-    //         TASK_CMD_FROM_HMI, "CMD_FROM_HMI" //
-    //         ,
-    //         1024 * 2 // This stack size can be checked & adjusted by reading the Stack Highwater
-    //         ,
-    //         NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    //         ,
-    //         &xTASK_CMD_HMI, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    //     );
-    // #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    //     Serial.printf("\nTASK=4:CMD_FROM_HMI OK");
-    // #endif
+        xTaskCreatePinnedToCore(
+            TASK_CMD_FROM_HMI, "CMD_FROM_HMI" //
+            ,
+            1024 * 2 // This stack size can be checked & adjusted by reading the Stack Highwater
+            ,
+            NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+            ,
+            &xTASK_CMD_HMI, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+        );
+    #if defined(DEBUG_MODE) 
+        Serial.printf("\nTASK=4:CMD_FROM_HMI OK");
+    #endif
 
-    //     xTaskCreatePinnedToCore(
-    //         TASK_HMI_CMD_handle, "handle_CMD_FROM_HMI" //
-    //         ,
-    //         1024 * 8 // This stack size can be checked & adjusted by reading the Stack Highwater
-    //         ,
-    //         NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    //         ,
-    //         &xTASK_HMI_CMD_handle, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
-    //     );
-    // #if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
-    //     Serial.printf("\nTASK=5:handle_CMD_FROM_HMI OK");
-    // #endif
+        xTaskCreatePinnedToCore(
+            TASK_HMI_CMD_handle, "handle_CMD_FROM_HMI" //
+            ,
+            1024 * 8 // This stack size can be checked & adjusted by reading the Stack Highwater
+            ,
+            NULL, 2 // Priority, with 1 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+            ,
+            &xTASK_HMI_CMD_handle, 1 // Running Core decided by FreeRTOS,let core0 run wifi and BT
+        );
+    #if defined(DEBUG_MODE) 
+        Serial.printf("\nTASK=5:handle_CMD_FROM_HMI OK");
+    #endif
 
     // INIT MODBUS
 
     mb.server(502); // Start Modbus IP //default port :502
 
-#if defined(DEBUG_MODE) && !defined(MODBUS_RTU)
+#if defined(DEBUG_MODE) 
     Serial.printf("\nStart Modbus-TCP  service OK\n");
 #endif
     // Add SENSOR_IREG register - Use addIreg() for analog Inputs
@@ -200,7 +200,7 @@ void setup()
     Heat_pid_controller.start();
 
     ////////////////////////////////////////////////////////////////
-    vTaskDelay(3000);
+    delay(3000);
     digitalWrite(SYSTEM_RLY, HIGH); // 启动机器
 }
 

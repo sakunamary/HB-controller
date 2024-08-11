@@ -87,10 +87,10 @@ void Task_Thermo_get_data(void *pvParameters)
         }
 
 #if defined(DEBUG_MODE)
-        Serial.printf("CH3 bt:%d\n", int(round(BT_TEMP * 10)));
-        Serial.printf("CH1 inlet:%d\n", int(round(INLET_TEMP * 10)));
-        Serial.printf("CH2 ex:%d\n", int(round(EX_TEMP * 10)));
-        Serial.println();
+        // Serial.printf("CH3 bt:%d\n", int(round(BT_TEMP * 10)));
+        // Serial.printf("CH1 inlet:%d\n", int(round(INLET_TEMP * 10)));
+        // Serial.printf("CH2 ex:%d\n", int(round(EX_TEMP * 10)));
+        // Serial.println();
 #endif
         // update  Hreg data
         mb.Hreg(BT_HREG, int(round(BT_TEMP * 10)));       // 初始化赋值

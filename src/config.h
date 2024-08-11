@@ -2,8 +2,8 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#define VERSION "1.0.4"
-// #define DEBUG_MODE
+#define VERSION "1.0.5"
+ //#define DEBUG_MODE
 //  uncomment to make work for HB M6SE ,default is work for HB M2SE
 #define MODEL_M6S
 
@@ -105,7 +105,7 @@ uint8_t make_frame_data(uint8_t data_array[BUFFER_SIZE], int cmd_type, uint16_t 
     switch (cmd_type)
     {
     case 1:
-        if (uBit > 2 && uBit < 9)
+        if (uBit > 2 && uBit < 11)
         {
             data_array[uBit] = low;      // frame end
             data_array[uBit + 1] = high; // frame end
