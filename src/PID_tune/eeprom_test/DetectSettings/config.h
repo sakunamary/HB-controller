@@ -2,8 +2,8 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#define VERSION "1.0.9"
-//#define DEBUG_MODE
+#define VERSION "1.0.5"
+// #define DEBUG_MODE
 //  uncomment to make work for HB M6SE ,default is work for HB M2SE
 // #define MODEL_M6S
 
@@ -43,11 +43,6 @@ const int BUFFER_SIZE = 16;
 #define RNOMINAL 1000
 #define ADC_BIT 16
 
-
-#define  PID_TUNE_SV_1 155
-#define  PID_TUNE_SV_2 175
-#define  PID_TUNE_SV_3 195
-
 // EEPROM address
 #define LOCATION_SETTINGS 0
 //
@@ -63,45 +58,7 @@ typedef struct eeprom_settings
     double EX_tempfix;
 } pid_setting_t;
 
-
-static TaskHandle_t xTASK_data_to_HMI = NULL;
-static TaskHandle_t xTASK_CMD_HMI = NULL;
-static TaskHandle_t xTASK_HMI_CMD_handle = NULL;
-static TaskHandle_t xTask_PID_autotune = NULL;
-static TaskHandle_t xTask_modbus_control = NULL;
-
-SemaphoreHandle_t xThermoDataMutex = NULL;
-
-
-QueueHandle_t queue_data_to_HMI = xQueueCreate(15, sizeof(uint8_t[BUFFER_SIZE])); // 发送到TC4的命令队列
-QueueHandle_t queueCMD = xQueueCreate(15, sizeof(uint8_t[BUFFER_SIZE]));          // 发送到TC4的命令队列
-
 #endif
-// HB --> HMI的数据帧 FrameLenght = 16
-// 帧头: 69 FF
-// 类型: 01温度数据
-// 温度1: 00 00 // uint16
-// 温度2: 00 00 // uint16
-// 温度3: 00 00 // uint16
-// 温度4: 00 00 // uint16
-// NULL: 00 00
-// 帧尾:FF FF FF
-
-// HB --> HMI的控制状态帧 FrameLenght = 16
-// 帧头: 69 FF
-// 类型:02控制数据
-// 系统OK : 00
-// 火力: 00 00 // uint16
-// PID SV : 00 00 // uint16
-// PID_STATUS: 00 // uint8
-// 火力开关: 00
-// 冷却开关: 00 // uint16
-// PID_TUNE :00
-// NULL: 00
-// 帧尾:FF FF FF
-
-// 温度为小端模式   dec 2222  hex AE 08
-
 // pid
 
 // 20pa  CT:3s SV:180  60 -5

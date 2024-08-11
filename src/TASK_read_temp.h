@@ -4,38 +4,47 @@
 #include <Arduino.h>
 #include "config.h"
 #include <Wire.h>
-#include "max6675.h"
+#include <MCP3424.h>
+#include "TypeK.h"
+#include "ArduPID.h"
+#include "DFRobot_AHT20.h"
 
-#include <Adafruit_MAX31865.h>
 #include <WiFi.h>
 
 #include <ModbusIP_ESP8266.h>
 ModbusIP mb; // declear object
+uint8_t MCP3424_address = 0x68;
+long Voltage; // Array used to store results
+
+MCP3424 ADC_MCP3424(MCP3424_address); // Declaration of MCP3424 A2=0 A1=1 A0=0
+
+DFRobot_AHT20 aht20;
+
+ArduPID Heat_pid_controller;
+extern ExternalEEPROM I2C_EEPROM;
+TypeK temp_K_cal;
 
 double BT_TEMP;
 double ET_TEMP;
 double INLET_TEMP;
 double EX_TEMP;
+double AMB_RH;
+double AMB_TEMP;
+
 int i, j;
 double bt_temp[5];
 double temp_;
 extern pid_setting_t pid_parm;
-
-MAX6675 thermo_EX(SPI_SCK, SPI_CS_EX, SPI_MISO); // CH2  thermoEX
-
-// Use software SPI: CS, DI, DO, CLK
-Adafruit_MAX31865 thermo_INLET = Adafruit_MAX31865(SPI_CS_INLET, SPI_MOSI, SPI_MISO, SPI_SCK); // CH1
-Adafruit_MAX31865 thermo_BT = Adafruit_MAX31865(SPI_CS_BT, SPI_MOSI, SPI_MISO, SPI_SCK);       // CH3
-
-#if defined(MODEL_M6S)
-Adafruit_MAX31865 thermo_ET = Adafruit_MAX31865(SPI_CS_ET, SPI_MOSI, SPI_MISO, SPI_SCK); // CH4
-#endif
+extern bool pid_status;
+// Need this for the lower level access to set them up.
 
 // Modbus Registers Offsets
 const uint16_t BT_HREG = 3001;
 const uint16_t ET_HREG = 3002;
 const uint16_t INLET_HREG = 3003;
 const uint16_t EXHAUST_HREG = 3004;
+const uint16_t AMB_RH_HREG = 3010;
+const uint16_t AMB_TEMP_HREG = 3011;
 
 void Task_Thermo_get_data(void *pvParameters)
 { // function
@@ -49,7 +58,18 @@ void Task_Thermo_get_data(void *pvParameters)
     /* Task Setup and Initialize */
     // Initial the xLastWakeTime variable with the current time.
     xLastWakeTime = xTaskGetTickCount();
-    // setup for the the SPI library:
+
+#if defined(DEBUG_MODE)
+    Serial.printf("\nEEPROM value check ...\n");
+    Serial.printf("pid_CT:%4.2f\n", pid_parm.pid_CT);
+    Serial.printf("PID kp:%4.2f\n", pid_parm.p);
+    Serial.printf("PID ki:%4.2f\n", pid_parm.i);
+    Serial.printf("PID kd:%4.2f\n", pid_parm.d);
+    Serial.printf("BT fix:%4.2f\n", pid_parm.BT_tempfix);
+    Serial.printf("ET fix:%4.2f\n", pid_parm.ET_tempfix);
+    Serial.printf("Inlet fix:%4.2f\n", pid_parm.inlet_tempfix);
+    Serial.printf("EX fix:%4.2f\n", pid_parm.EX_tempfix);
+#endif
 
     while (1)
     { // for loop
@@ -58,72 +78,69 @@ void Task_Thermo_get_data(void *pvParameters)
 
         if (xSemaphoreTake(xThermoDataMutex, xIntervel) == pdPASS) // 给温度数组的最后一个数值写入数据
         {
-            vTaskDelay(60);
-            EX_TEMP = thermo_EX.readCelsius(); // CH2
-            vTaskDelay(60);
-            INLET_TEMP = thermo_INLET.temperature(RNOMINAL, RREF); // CH1
-            for (i = 0; i < 5; i++)
+
+            if (aht20.startMeasurementReady(/* crcEn = */ true))
             {
-                vTaskDelay(60);
-                bt_temp[i] = thermo_BT.temperature(RNOMINAL, RREF); // CH3
-                for (j = i + 1; j < 5; j++)
-                {
-                    if (bt_temp[i] > bt_temp[j])
-                    {
-                        temp_ = bt_temp[i];
-                        bt_temp[i] = bt_temp[j];
-                        bt_temp[j] = temp_;
-                    }
-                }
+                AMB_TEMP = aht20.getTemperature_C();
+                AMB_RH = aht20.getHumidity_RH();
             }
-            BT_TEMP = bt_temp[2] + pid_parm.BT_tempfix; // for bt temp more accuricy
+            vTaskDelay(100);
+
+            ADC_MCP3424.Configuration(2, ADC_BIT, 1, 8);                                                  // MCP3424 is configured to channel i with 18 bits resolution, continous mode and gain defined to 8
+            Voltage = ADC_MCP3424.Measure();                                                              // Measure is stocked in array Voltage, note that the library will wait for a completed conversion that takes around 200 ms@18bits
+            EX_TEMP = temp_K_cal.Temp_C(Voltage * 0.001, aht20.getTemperature_C()) + pid_parm.EX_tempfix; // CH2
+
+            vTaskDelay(100);
+            ADC_MCP3424.Configuration(1, ADC_BIT, 1, 1);
+            Voltage = ADC_MCP3424.Measure();
+            INLET_TEMP = pid_parm.inlet_tempfix + (((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083)); // CH1
+            vTaskDelay(100);
+            ADC_MCP3424.Configuration(3, ADC_BIT, 1, 1);
+            Voltage = ADC_MCP3424.Measure();
+            BT_TEMP = pid_parm.BT_tempfix + (((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083)); // CH3
 
 #if defined(MODEL_M6S)
-
-            vTaskDelay(60);
-            ET_TEMP = thermo_ET.temperature(RNOMINAL, RREF);
+            ADC_MCP3424.Configuration(4, ADC_BIT, 1, 1);
+            Voltage = ADC_MCP3424.Measure();
+            ET_TEMP = pid_parm.ET_tempfix + (((Voltage / 1000 * RNOMINAL) / ((3.3 * 1000) - Voltage / 1000) - RREF) / (RREF * 0.0039083)); // CH4
 #endif
+
+            if (pid_status)
+            {
+                if (BT_TEMP >= PID_TUNE_SV_1)
+                {
+                    I2C_EEPROM.get(128, pid_parm);
+                    Heat_pid_controller.setCoefficients(pid_parm.p, pid_parm.i, pid_parm.d);
+                }
+                else if (BT_TEMP >= PID_TUNE_SV_2)
+                {
+                    I2C_EEPROM.get(256, pid_parm);
+                    Heat_pid_controller.setCoefficients(pid_parm.p, pid_parm.i, pid_parm.d);
+                }
+            }
+
             xSemaphoreGive(xThermoDataMutex); // end of lock mutex
         }
 
 #if defined(DEBUG_MODE)
-        // Serial.printf("CH3 bt:%d\n", int(round(BT_TEMP * 10)));
-        // Serial.printf("CH1 inlet:%d\n", int(round(INLET_TEMP * 10)));
-        // Serial.printf("CH2 ex:%d\n", int(round(EX_TEMP * 10)));
-        // Serial.println();
+        Serial.printf("CH3 (3001) bt:%d\n", int(round(BT_TEMP * 10)));
+        Serial.printf("CH1 (3003) inlet:%d\n", int(round(INLET_TEMP * 10)));
+        Serial.printf("CH2 (3004) ex:%d\n", int(round(EX_TEMP * 10)));
+        Serial.println();
 #endif
         // update  Hreg data
-        mb.Hreg(BT_HREG, int(round(BT_TEMP * 10)));       // 初始化赋值
-        mb.Hreg(INLET_HREG, int(round(INLET_TEMP * 10))); // 初始化赋值
-        mb.Hreg(EXHAUST_HREG, int(round(EX_TEMP * 10)));  // 初始化赋值
+        mb.Hreg(BT_HREG, int(round(BT_TEMP * 10)));        // 初始化赋值
+        mb.Hreg(INLET_HREG, int(round(INLET_TEMP * 10)));  // 初始化赋值
+        mb.Hreg(EXHAUST_HREG, int(round(EX_TEMP * 10)));   // 初始化赋值
+        mb.Hreg(AMB_RH_HREG, int(round(AMB_RH * 10)));     // 初始化赋值
+        mb.Hreg(AMB_TEMP_HREG, int(round(AMB_TEMP * 10))); // 初始化赋值
+
 // making the HMI frame
 #if defined(MODEL_M6S)
         mb.Hreg(ET_HREG, int(round(ET_TEMP * 10))); // 初始化赋值
-       make_frame_data(TEMP_DATA_Buffer, 1, int(round(ET_TEMP * 10)), 9);
-// #else
-//         make_frame_data(TEMP_DATA_Buffer, 1, 0, 9);
 #endif
-        make_frame_package(TEMP_DATA_Buffer, true, 1);
-        make_frame_data(TEMP_DATA_Buffer, 1, int(round(BT_TEMP * 10)), 3);
-        make_frame_data(TEMP_DATA_Buffer, 1, int(round(INLET_TEMP * 10)), 5);
-        make_frame_data(TEMP_DATA_Buffer, 1, int(round(EX_TEMP * 10)), 7);
-        xQueueSend(queue_data_to_HMI, &TEMP_DATA_Buffer, xIntervel / 3);
-        // send notify to TASK_data_to_HMI
-        xTaskNotify(xTASK_data_to_HMI, 0, eIncrement);
     }
 
 } // function
 
 #endif
-// HB --> HMI的数据帧 FrameLenght = 16
-// 帧头: 69 FF
-// 类型: 01温度数据
-// 温度1: 00 00 // uint16
-// 温度2: 00 00 // uint16
-// 温度3: 00 00 // uint16
-// 温度4: 00 00 // uint16
-// NULL: 00 00 //uint16
-// 帧尾:FF FF FF
-
-
-// 温度为小端模式   dec 2222  hex AE 08
