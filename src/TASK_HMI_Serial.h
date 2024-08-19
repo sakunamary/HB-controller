@@ -77,8 +77,8 @@ void TASK_HMI_CMD_handle(void *pvParameters)
                 if (HMI_CMD_Buffer[0] == 0x00 && HMI_CMD_Buffer[1] == 0x00 && HMI_CMD_Buffer[2] == 0x00 && HMI_CMD_Buffer[6] == 0x88)
                 {
 
-                    Serial.println("CMD form HMI");
-                    Serial.write(HMI_CMD_Buffer, BUFFER_SIZE);
+                    //Serial.println("CMD form HMI");
+                   // Serial.write(HMI_CMD_Buffer, BUFFER_SIZE);
                     // 67 FF 01 00 00 00 00 00 00 00 00 25 37 00 FF FF FF
                     HMI_OUT_Buffer[0] = 0x67;
                     HMI_OUT_Buffer[1] = 0xff;
